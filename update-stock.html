@@ -1,0 +1,179 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Update Stock - Farmer Stock Management</title>
+    <link rel="stylesheet" href="/css/update-stock.css">
+</head>
+<body>
+<div class="container">
+    <div class="form-wrapper">
+        <div class="form-header">
+            <h1>️ Update Stock Details</h1>
+            <p class="subtitle">Modify your vegetable stock information</p>
+        </div>
+
+        <!-- Stock Info Display -->
+        <div id="stockInfo" class="stock-info" style="display: none;">
+            <div class="info-grid">
+                <div class="info-item">
+                    <label>Vegetable:</label>
+                    <p id="displayVegetable"></p>
+                </div>
+                <div class="info-item">
+                    <label>Category:</label>
+                    <p id="displayCategory"></p>
+                </div>
+                <div class="info-item">
+                    <label>Harvest Date:</label>
+                    <p id="displayHarvestDate"></p>
+                </div>
+                <div class="info-item">
+                    <label>Created:</label>
+                    <p id="displayCreated"></p>
+                </div>
+            </div>
+        </div>
+
+        <form id="updateStockForm" class="form-group">
+            <!-- Quantity Section -->
+            <div class="section">
+                <h3> Quantity</h3>
+                <div class="form-row">
+                    <div class="form-section">
+                        <label for="currentQuantity">Current Quantity (kg)</label>
+                        <input
+                                type="number"
+                                id="currentQuantity"
+                                placeholder="Current quantity"
+                                readonly
+                                style="background-color: #f0f0f0;"
+                        >
+                    </div>
+                    <div class="form-section">
+                        <label for="newQuantity">New Quantity (kg) <span class="required">*</span></label>
+                        <input
+                                type="number"
+                                id="newQuantity"
+                                name="quantityKg"
+                                placeholder="Enter new quantity"
+                                step="0.01"
+                                min="0"
+                        >
+                        <small>Leave empty to keep current quantity</small>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Price Section -->
+            <div class="section">
+                <h3> Price</h3>
+                <div class="form-row">
+                    <div class="form-section">
+                        <label for="currentPrice">Current Price (Rs./kg)</label>
+                        <input
+                                type="number"
+                                id="currentPrice"
+                                placeholder="Current price"
+                                readonly
+                                style="background-color: #f0f0f0;"
+                        >
+                    </div>
+                    <div class="form-section">
+                        <label for="newPrice">New Price (Rs./kg) <span class="required">*</span></label>
+                        <input
+                                type="number"
+                                id="newPrice"
+                                name="pricePerKg"
+                                placeholder="Enter new price"
+                                step="0.01"
+                                min="0"
+                        >
+                        <small>Leave empty to keep current price</small>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Quality Grade Section -->
+            <div class="section">
+                <h3> Quality Grade</h3>
+                <div class="form-row">
+                    <div class="form-section">
+                        <label for="currentQuality">Current Quality</label>
+                        <input
+                                type="text"
+                                id="currentQuality"
+                                placeholder="Current quality"
+                                readonly
+                                style="background-color: #f0f0f0;"
+                        >
+                    </div>
+                    <div class="form-section">
+                        <label for="newQuality">New Quality Grade</label>
+                        <select id="newQuality" name="qualityGrade">
+                            <option value="">-- Select Grade --</option>
+                            <option value="A">Grade A - Premium Quality</option>
+                            <option value="B">Grade B - Good Quality</option>
+                            <option value="C">Grade C - Standard Quality</option>
+                        </select>
+                        <small>Leave empty to keep current quality</small>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Status Section -->
+            <div class="section">
+                <h3> Availability Status</h3>
+                <div class="form-row">
+                    <div class="form-section">
+                        <label for="currentStatus">Current Status</label>
+                        <input
+                                type="text"
+                                id="currentStatus"
+                                placeholder="Current status"
+                                readonly
+                                style="background-color: #f0f0f0;"
+                        >
+                    </div>
+                    <div class="form-section">
+                        <label for="newStatus">New Status</label>
+                        <select id="newStatus" name="availabilityStatus">
+                            <option value="">-- Select Status --</option>
+                            <option value="Available"> Available</option>
+                            <option value="Low Stock"> Low Stock</option>
+                            <option value="Out of Stock"> Out of Stock</option>
+                        </select>
+                        <small>Leave empty to auto-calculate based on quantity</small>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Action Buttons -->
+            <div class="form-actions">
+                <button type="submit" class="btn btn-primary"> Update Stock</button>
+                <button type="reset" class="btn btn-secondary"> Reset</button>
+                <a href="/farmer-dashboard" class="btn btn-tertiary"> Back to Dashboard</a>
+            </div>
+        </form>
+
+        <!-- Success Message -->
+        <div id="successMessage" class="alert alert-success" style="display: none;">
+            <span class="close-btn" onclick="closeAlert('successMessage')">&times;</span>
+            <strong>✓ Success!</strong> <span id="successText"></span>
+        </div>
+
+        <!-- Error Message -->
+        <div id="errorMessage" class="alert alert-error" style="display: none;">
+            <span class="close-btn" onclick="closeAlert('errorMessage')">&times;</span>
+            <strong>✗ Error!</strong> <span id="errorText"></span>
+        </div>
+
+        <!-- Loading Spinner -->
+        <div id="loadingSpinner" class="spinner" style="display: none;"></div>
+    </div>
+</div>
+
+<script src="/js/update-stock.js"></script>
+</body>
+</html>
