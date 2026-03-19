@@ -1,7 +1,7 @@
-package com.vegwaste.productlisting.controller;
+package controller;
 
 import com.vegwaste.productlisting.entity.ProductListing;
-import com.vegwaste.productlisting.service.ProductListingService;
+import service.ProductListingService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;

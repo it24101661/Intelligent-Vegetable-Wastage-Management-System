@@ -1,4 +1,4 @@
-package com.vegwaste.productlisting.service;
+package service;
 
 import com.vegwaste.productlisting.entity.ProductListing;
 import com.vegwaste.productlisting.repository.ProductListingRepository;

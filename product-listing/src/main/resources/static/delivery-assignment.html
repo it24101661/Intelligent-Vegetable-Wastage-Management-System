@@ -1,0 +1,658 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Delivery assignment · Dashboard</title>
+    <!-- Font Awesome 6 (free) -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Inter', system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+        }
+
+        body {
+            background: #f4f7fb;
+            display: flex;
+            justify-content: center;
+            min-height: 100vh;
+            padding: 2rem 1.5rem;
+        }
+
+        .dashboard {
+            max-width: 1440px;
+            width: 100%;
+        }
+
+        /* header */
+        .header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-bottom: 2rem;
+            flex-wrap: wrap;
+            gap: 1rem;
+        }
+
+        .header h1 {
+            font-size: 2rem;
+            font-weight: 600;
+            color: #1e293b;
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+        }
+
+        .header h1 i {
+            color: #22c55e;
+            background: #e6f7ec;
+            padding: 0.6rem;
+            border-radius: 16px;
+        }
+
+        .badge {
+            background: white;
+            padding: 0.5rem 1.2rem;
+            border-radius: 40px;
+            font-weight: 500;
+            box-shadow: 0 2px 6px rgba(0,0,0,0.02);
+            display: flex;
+            align-items: center;
+            gap: 0.6rem;
+            border: 1px solid #e2e8f0;
+        }
+
+        .badge i {
+            color: #3b82f6;
+        }
+
+        /* stats quick row */
+        .stats-row {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+            gap: 1.2rem;
+            margin-bottom: 2rem;
+        }
+
+        .stat-card {
+            background: white;
+            padding: 1.2rem 1.2rem;
+            border-radius: 24px;
+            box-shadow: 0 6px 14px rgba(0,20,40,0.03);
+            border: 1px solid #eef2f6;
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+        }
+
+        .stat-icon {
+            width: 48px;
+            height: 48px;
+            background: #f0f9ff;
+            border-radius: 18px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: #0f73ee;
+            font-size: 1.4rem;
+        }
+
+        .stat-content h3 {
+            font-size: 0.9rem;
+            font-weight: 500;
+            color: #5e6f8d;
+            letter-spacing: 0.02rem;
+        }
+
+        .stat-content .value {
+            font-size: 1.7rem;
+            font-weight: 700;
+            color: #0c1b33;
+            line-height: 1.2;
+        }
+
+        /* main grid */
+        .grid-2col {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 1.8rem;
+            margin-bottom: 2rem;
+        }
+
+        @media (max-width: 900px) {
+            .grid-2col { grid-template-columns: 1fr; }
+        }
+
+        .panel {
+            background: white;
+            border-radius: 28px;
+            box-shadow: 0 12px 30px rgba(0,0,0,0.04);
+            padding: 1.4rem 1.2rem 1.2rem 1.2rem;
+            border: 1px solid #edf2f9;
+        }
+
+        .panel-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-bottom: 1.2rem;
+            padding: 0 0.2rem;
+        }
+
+        .panel-header h2 {
+            font-size: 1.3rem;
+            font-weight: 600;
+            color: #1e2b45;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .btn-icon {
+            background: none;
+            border: 1px solid #dde3ed;
+            border-radius: 30px;
+            padding: 0.4rem 0.9rem;
+            font-size: 0.85rem;
+            font-weight: 500;
+            color: #3c4b64;
+            cursor: default;
+            display: flex;
+            align-items: center;
+            gap: 5px;
+        }
+
+        .btn-icon i {
+            font-size: 0.8rem;
+            color: #7f8fa4;
+        }
+
+        /* agent list & order list */
+        .agent-list, .order-list {
+            display: flex;
+            flex-direction: column;
+            gap: 0.75rem;
+            max-height: 340px;
+            overflow-y: auto;
+            padding-right: 0.3rem;
+        }
+
+        .agent-item, .order-item {
+            background: #fafcff;
+            border: 1px solid #e9eef4;
+            border-radius: 18px;
+            padding: 0.8rem 1rem;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            transition: 0.1s ease;
+        }
+
+        .agent-item:hover, .order-item:hover {
+            background: #f1f6fd;
+            border-color: #cbd5e1;
+        }
+
+        .agent-info {
+            display: flex;
+            flex-direction: column;
+        }
+
+        .agent-name {
+            font-weight: 600;
+            color: #0f263b;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+        .agent-name i {
+            color: #22c55e;
+            font-size: 0.8rem;
+        }
+
+        .agent-detail {
+            font-size: 0.8rem;
+            color: #577190;
+            margin-top: 2px;
+            display: flex;
+            gap: 15px;
+        }
+
+        .capacity-bar {
+            width: 70px;
+            height: 6px;
+            background: #dfe7f0;
+            border-radius: 20px;
+            overflow: hidden;
+            margin-right: 10px;
+        }
+
+        .capacity-fill {
+            height: 6px;
+            background: #22c55e;
+            border-radius: 20px;
+            width: 0%;
+        }
+
+        .agent-status {
+            font-size: 0.7rem;
+            font-weight: 600;
+            padding: 0.2rem 0.6rem;
+            border-radius: 40px;
+            background: #e8f3e9;
+            color: #1f7832;
+            text-transform: uppercase;
+        }
+
+        .order-item {
+            display: flex;
+            justify-content: space-between;
+        }
+
+        .order-info {
+            display: flex;
+            flex-direction: column;
+        }
+
+        .order-title {
+            font-weight: 600;
+            color: #153150;
+        }
+
+        .order-meta {
+            font-size: 0.75rem;
+            color: #637e9b;
+            margin-top: 4px;
+            display: flex;
+            gap: 15px;
+        }
+
+        .order-address {
+            max-width: 180px;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+
+        .assign-btn {
+            background: white;
+            border: 1px solid #cbd5e1;
+            border-radius: 30px;
+            padding: 0.4rem 1rem;
+            font-size: 0.75rem;
+            font-weight: 500;
+            color: #2563eb;
+            cursor: pointer;
+            transition: 0.15s;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.02);
+        }
+
+        .assign-btn:hover {
+            background: #2563eb;
+            color: white;
+            border-color: #2563eb;
+        }
+
+        /* assignment table */
+        .assignment-table-wrapper {
+            background: white;
+            border-radius: 26px;
+            padding: 1.2rem 1.2rem 0.8rem 1.2rem;
+            margin-top: 0.5rem;
+            border: 1px solid #edf2f9;
+        }
+
+        .table-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 1.2rem;
+        }
+
+        .status-tabs {
+            display: flex;
+            gap: 0.5rem;
+        }
+
+        .tab {
+            background: #f1f4f9;
+            border: none;
+            padding: 0.4rem 1.1rem;
+            border-radius: 40px;
+            font-size: 0.8rem;
+            font-weight: 500;
+            color: #415a77;
+            cursor: pointer;
+        }
+
+        .tab.active {
+            background: #1f2a44;
+            color: white;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+
+        th {
+            text-align: left;
+            padding: 0.8rem 0.2rem 0.6rem 0.2rem;
+            color: #5d6f88;
+            font-weight: 500;
+            font-size: 0.8rem;
+            border-bottom: 1px solid #e5eef9;
+        }
+
+        td {
+            padding: 0.7rem 0.2rem;
+            font-size: 0.9rem;
+            color: #1f2e46;
+            border-bottom: 1px solid #f0f4fc;
+        }
+
+        .status-badge {
+            background: #fef9e7;
+            color: #b6560c;
+            font-size: 0.7rem;
+            font-weight: 600;
+            padding: 0.25rem 0.7rem;
+            border-radius: 50px;
+            display: inline-block;
+        }
+
+        .status-badge.delivered {
+            background: #e0f6ea;
+            color: #11724b;
+        }
+
+        .status-badge.assigned {
+            background: #e6edff;
+            color: #253e8b;
+        }
+
+        .action-icon {
+            color: #7b8ba3;
+            margin: 0 5px;
+            cursor: default;
+        }
+
+        .note {
+            font-size: 0.8rem;
+            color: #6b7d9a;
+            font-style: italic;
+            max-width: 150px;
+        }
+
+        .footer-note {
+            margin-top: 1.5rem;
+            display: flex;
+            justify-content: flex-end;
+            color: #8c9bb3;
+            font-size: 0.8rem;
+        }
+
+        /* modal mock (hidden by default) — we use js alert for simplicity */
+        .hidden {
+            display: none;
+        }
+
+        i.fa-regular, i.fas, i.far {
+            pointer-events: none;
+        }
+    </style>
+</head>
+<body>
+<div class="dashboard">
+    <!-- header -->
+    <div class="header">
+        <h1><i class="fas fa-truck-fast"></i> delivery & distribution</h1>
+        <div class="badge"><i class="fas fa-calendar-alt"></i> assignment board · live</div>
+    </div>
+
+    <!-- stats summary (injected with js later, but static mock) -->
+    <div class="stats-row" id="statsRow">
+        <div class="stat-card"><div class="stat-icon"><i class="fas fa-users"></i></div><div class="stat-content"><h3>available agents</h3><div class="value" id="statAgents">3</div></div></div>
+        <div class="stat-card"><div class="stat-icon"><i class="fas fa-box"></i></div><div class="stat-content"><h3>unassigned orders</h3><div class="value" id="statOrders">5</div></div></div>
+        <div class="stat-card"><div class="stat-icon"><i class="fas fa-tasks"></i></div><div class="stat-content"><h3>active deliveries</h3><div class="value" id="statActive">4</div></div></div>
+        <div class="stat-card"><div class="stat-icon"><i class="fas fa-check-circle"></i></div><div class="stat-content"><h3>completed today</h3><div class="value" id="statCompleted">2</div></div></div>
+    </div>
+
+    <!-- two column: agents & unassigned orders -->
+    <div class="grid-2col">
+        <!-- left: available agents -->
+        <div class="panel">
+            <div class="panel-header">
+                <h2><i class="fas fa-bicycle" style="color: #3b82f6;"></i> available agents</h2>
+                <span class="btn-icon"><i class="fas fa-rotate"></i>  just now</span>
+            </div>
+            <div class="agent-list" id="agentListContainer">
+                <!-- dynamically loaded via js -->
+                <div style="text-align: center; color: #8497b0; padding: 1rem;"><i class="fas fa-spinner fa-pulse"></i> loading agents...</div>
+            </div>
+            <div style="margin-top: 0.8rem; font-size:0.8rem; color:#728aa5;"><i class="far fa-clock"></i> capacity shown as bar</div>
+        </div>
+
+        <!-- right: unassigned orders -->
+        <div class="panel">
+            <div class="panel-header">
+                <h2><i class="fas fa-basket-shopping" style="color: #e86e3a;"></i> unassigned orders</h2>
+                <span class="btn-icon"><i class="fas fa-plus"></i>  need dispatch</span>
+            </div>
+            <div class="order-list" id="orderListContainer">
+                <div style="text-align: center; color: #8497b0; padding: 1rem;"><i class="fas fa-spinner fa-pulse"></i> loading orders...</div>
+            </div>
+            <div style="margin-top: 0.8rem; font-size:0.8rem; color:#728aa5;"><i class="far fa-map"></i> click assign to allocate</div>
+        </div>
+    </div>
+
+    <!-- assignments table -->
+    <div class="assignment-table-wrapper">
+        <div class="table-header">
+            <h2 style="font-size:1.3rem; display: flex; gap: 0.4rem;"><i class="fas fa-list-check" style="color:#2b4b7c;"></i> delivery assignments</h2>
+            <div class="status-tabs">
+                <button class="tab active" data-status="all">all</button>
+                <button class="tab" data-status="PENDING">pending</button>
+                <button class="tab" data-status="IN_PROGRESS">in progress</button>
+                <button class="tab" data-status="DELIVERED">delivered</button>
+            </div>
+        </div>
+        <div style="overflow-x: auto;">
+            <table id="assignmentTable">
+                <thead>
+                <tr><th>order</th><th>customer</th><th>agent</th><th>est. delivery</th><th>status</th><th>notes</th></tr>
+                </thead>
+                <tbody id="assignmentBody">
+                <tr><td colspan="6" style="text-align:center; color:#6d85a4;"><i class="fas fa-spinner fa-pulse"></i> loading assignments...</td></tr>
+                </tbody>
+            </table>
+        </div>
+        <div class="footer-note">
+            <i class="fa-regular fa-pen-to-square"></i> update status via PUT /api/assignments/{id}/status
+        </div>
+    </div>
+</div>
+
+<script>
+    (function() {
+        // ---------- mock data (conforms to backend DTOs / models) ----------
+        const mockAgents = [
+            { id: 1, agentName: 'Raju Kumar', phoneNumber: '9876543210', email: 'raju@example.com', vehicleType: 'e-bike', vehicleNumber: 'DL-123', maxCapacity: 50.0, currentCapacity: 12.5, status: 'AVAILABLE' },
+            { id: 2, agentName: 'Priya Sharma', phoneNumber: '9988776655', email: 'priya@example.com', vehicleType: 'scooter', vehicleNumber: 'HR-456', maxCapacity: 80.0, currentCapacity: 34.0, status: 'AVAILABLE' },
+            { id: 3, agentName: 'Amit Mehta', phoneNumber: '9123456780', email: 'amit@example.com', vehicleType: 'cargo cycle', vehicleNumber: 'BR-789', maxCapacity: 40.0, currentCapacity: 40.0, status: 'BUSY' }, // not available
+            { id: 4, agentName: 'Sunita Reddy', phoneNumber: '9900112233', email: 'sunita@example.com', vehicleType: 'e-rickshaw', vehicleNumber: 'UP-001', maxCapacity: 120.0, currentCapacity: 45.8, status: 'AVAILABLE' },
+        ];
+
+        const mockOrders = [
+            { id: 101, orderNumber: 'ORD-1001', customerName: 'Meera Nair', customerPhone: '9988001122', customerAddress: '12/3, Gandhi Nagar', vegetableType: 'potato', quantity: 5.5, status: 'PENDING' },
+            { id: 102, orderNumber: 'ORD-1002', customerName: 'Arjun Singh', customerPhone: '7766554433', customerAddress: '44, sector 18, Noida', vegetableType: 'tomato', quantity: 3.0, status: 'PENDING' },
+            { id: 103, orderNumber: 'ORD-1003', customerName: 'Lakshmi Iyer', customerPhone: '9876123450', customerAddress: '9, east coast road', vegetableType: 'onion', quantity: 10.0, status: 'PENDING' },
+            { id: 104, orderNumber: 'ORD-1004', customerName: 'David John', customerPhone: '7022334455', customerAddress: '77, church street', vegetableType: 'carrot', quantity: 2.5, status: 'PENDING' },
+            { id: 105, orderNumber: 'ORD-1005', customerName: 'Fatima Khan', customerPhone: '8899776655', customerAddress: 'b-66, park view', vegetableType: 'spinach', quantity: 1.5, status: 'PENDING' },
+        ];
+
+        // delivery assignments (DeliveryAssignmentDTO format)
+        const mockAssignments = [
+            { id: 201, agentId: 1, agentName: 'Raju Kumar', orderId: 101, orderNumber: 'ORD-1001', customerName: 'Meera Nair', customerAddress: '12/3, Gandhi Nagar', estimatedDeliveryTime: '2025-02-24T16:30:00', deliveryStatus: 'PENDING', deliveryNotes: 'leave at gate' },
+            { id: 202, agentId: 2, agentName: 'Priya Sharma', orderId: 103, orderNumber: 'ORD-1003', customerName: 'Lakshmi Iyer', customerAddress: '9, east coast road', estimatedDeliveryTime: '2025-02-24T17:00:00', deliveryStatus: 'IN_PROGRESS', deliveryNotes: 'call before arrival' },
+            { id: 203, agentId: 4, agentName: 'Sunita Reddy', orderId: 104, orderNumber: 'ORD-1004', customerName: 'David John', customerAddress: '77, church street', estimatedDeliveryTime: '2025-02-24T15:45:00', deliveryStatus: 'DELIVERED', deliveryNotes: 'paid online' },
+            { id: 204, agentId: 1, agentName: 'Raju Kumar', orderId: 105, orderNumber: 'ORD-1005', customerName: 'Fatima Khan', customerAddress: 'b-66, park view', estimatedDeliveryTime: '2025-02-24T18:20:00', deliveryStatus: 'PENDING', deliveryNotes: '' },
+        ];
+
+        // helper to update stats
+        function updateStats() {
+            const availableCount = mockAgents.filter(a => a.status === 'AVAILABLE' && a.currentCapacity < a.maxCapacity).length;
+            const unassignedCount = mockOrders.length; // all are unassigned in mock
+            const activeCount = mockAssignments.filter(a => a.deliveryStatus === 'IN_PROGRESS' || a.deliveryStatus === 'PENDING').length;
+            const completedCount = mockAssignments.filter(a => a.deliveryStatus === 'DELIVERED').length;
+
+            document.getElementById('statAgents').innerText = availableCount;
+            document.getElementById('statOrders').innerText = unassignedCount;
+            document.getElementById('statActive').innerText = activeCount;
+            document.getElementById('statCompleted').innerText = completedCount;
+        }
+
+        // render available agents (only AVAILABLE and capacity not full)
+        function renderAgents() {
+            const container = document.getElementById('agentListContainer');
+            const available = mockAgents.filter(a => a.status === 'AVAILABLE' && a.currentCapacity < a.maxCapacity);
+            if (available.length === 0) {
+                container.innerHTML = `<div style="padding: 1rem; text-align: center; color: #6d85a4;"><i class="fas fa-info-circle"></i> no available agents</div>`;
+                return;
+            }
+            container.innerHTML = available.map(agent => {
+                const capacityPercent = (agent.currentCapacity / agent.maxCapacity) * 100;
+                return `<div class="agent-item">
+                    <div style="flex:1">
+                        <div class="agent-name"><i class="fas fa-user-check"></i> ${agent.agentName}</div>
+                        <div class="agent-detail">
+                            <span><i class="fas fa-phone"></i> ${agent.phoneNumber}</span>
+                            <span><i class="fas fa-vehicle"></i> ${agent.vehicleType}</span>
+                        </div>
+                    </div>
+                    <div style="display: flex; align-items: center; gap: 12px;">
+                        <div class="capacity-bar"><div class="capacity-fill" style="width:${capacityPercent}%;"></div></div>
+                        <span class="agent-status">${Math.round(agent.currentCapacity)}/${agent.maxCapacity} kg</span>
+                    </div>
+                </div>`;
+            }).join('');
+        }
+
+        // render unassigned orders
+        function renderOrders() {
+            const container = document.getElementById('orderListContainer');
+            if (mockOrders.length === 0) {
+                container.innerHTML = `<div style="padding: 1rem; text-align: center;">🎉 all orders assigned</div>`;
+                return;
+            }
+            container.innerHTML = mockOrders.map(order => {
+                return `<div class="order-item" data-order-id="${order.id}">
+                    <div class="order-info">
+                        <span class="order-title">${order.orderNumber} · ${order.vegetableType} (${order.quantity}kg)</span>
+                        <span class="order-meta">
+                            <span><i class="fas fa-user"></i> ${order.customerName}</span>
+                            <span class="order-address"><i class="fas fa-location-dot"></i> ${order.customerAddress.substring(0,20)}...</span>
+                        </span>
+                    </div>
+                    <button class="assign-btn" onclick="mockAssignOrder(${order.id}, '${order.orderNumber}')"><i class="fas fa-plus"></i> assign</button>
+                </div>`;
+            }).join('');
+        }
+
+        // render assignments table (optionally filtered)
+        function renderAssignments(filterStatus = 'all') {
+            const tbody = document.getElementById('assignmentBody');
+            let filtered = [...mockAssignments];
+            if (filterStatus !== 'all') {
+                filtered = filtered.filter(a => a.deliveryStatus === filterStatus);
+            }
+            if (filtered.length === 0) {
+                tbody.innerHTML = `<tr><td colspan="6" style="text-align:center; color:#778da0;">no assignments for this filter</td></tr>`;
+                return;
+            }
+            tbody.innerHTML = filtered.map(a => {
+                let statusClass = 'status-badge';
+                if (a.deliveryStatus === 'DELIVERED') statusClass += ' delivered';
+                else if (a.deliveryStatus === 'IN_PROGRESS') statusClass += ' assigned';
+                else if (a.deliveryStatus === 'PENDING') statusClass += '';
+
+                const estTime = a.estimatedDeliveryTime ? new Date(a.estimatedDeliveryTime).toLocaleString('en-IN', { hour: '2-digit', minute: '2-digit', day:'2-digit', month:'short' }) : '—';
+                return `<tr>
+                    <td><b>${a.orderNumber}</b></td>
+                    <td>${a.customerName}</td>
+                    <td>${a.agentName}</td>
+                    <td>${estTime}</td>
+                    <td><span class="${statusClass}">${a.deliveryStatus.replace('_',' ')}</span></td>
+                    <td class="note">${a.deliveryNotes || '—'}</td>
+                </tr>`;
+            }).join('');
+        }
+
+        // expose mock assign function (simulates POST /api/assign)
+        window.mockAssignOrder = function(orderId, orderNumber) {
+            const availableAgents = mockAgents.filter(a => a.status === 'AVAILABLE' && a.currentCapacity < a.maxCapacity);
+            if (availableAgents.length === 0) {
+                alert('❌ No available agents at the moment.');
+                return;
+            }
+            // find order
+            const order = mockOrders.find(o => o.id === orderId);
+            if (!order) { alert('order not found'); return; }
+
+            // simple assignment: pick first available agent
+            const agent = availableAgents[0];
+            // create new assignment dto
+            const newId = 300 + mockAssignments.length + 1;
+            const newAssignment = {
+                id: newId,
+                agentId: agent.id,
+                agentName: agent.agentName,
+                orderId: order.id,
+                orderNumber: order.orderNumber,
+                customerName: order.customerName,
+                customerAddress: order.customerAddress,
+                estimatedDeliveryTime: new Date(Date.now() + 2*60*60*1000).toISOString(), // +2h
+                deliveryStatus: 'PENDING',
+                deliveryNotes: ''
+            };
+            mockAssignments.push(newAssignment);
+            // remove order from unassigned list
+            const idx = mockOrders.findIndex(o => o.id === orderId);
+            if (idx !== -1) mockOrders.splice(idx, 1);
+
+            // update agent capacity roughly (add order quantity)
+            agent.currentCapacity += order.quantity;
+            if (agent.currentCapacity >= agent.maxCapacity) agent.status = 'BUSY'; // for demo
+
+            // re-render everything
+            renderAgents();
+            renderOrders();
+            renderAssignments('all');
+            updateStats();
+            alert(`✅ Order ${orderNumber} assigned to ${agent.agentName}`);
+        };
+
+        // tab event listeners
+        document.querySelectorAll('.tab').forEach(tab => {
+            tab.addEventListener('click', function(e) {
+                document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+                this.classList.add('active');
+                const status = this.dataset.status; // 'all', 'PENDING', etc
+                renderAssignments(status);
+            });
+        });
+
+        // initial render
+        renderAgents();
+        renderOrders();
+        renderAssignments('all');
+        updateStats();
+    })();
+</script>
+<!-- optional: simulate status update note (just ui consistency) -->
+</body>
+</html>

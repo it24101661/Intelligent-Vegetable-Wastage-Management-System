@@ -1,0 +1,480 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Intelligent Vegetable Wastage Management System</title>
+    <link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet">
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+
+        :root {
+            --green: #2d6a4f;
+            --green-light: #52b788;
+            --green-pale: #d8f3dc;
+            --yellow: #f4a261;
+            --dark: #1a1a2e;
+            --card-bg: #ffffff;
+            --text: #1a1a2e;
+            --muted: #6b7280;
+            --border: #e5e7eb;
+        }
+
+        body {
+            font-family: 'DM Sans', sans-serif;
+            background: #f0f7f4;
+            min-height: 100vh;
+            color: var(--text);
+        }
+
+        /* HEADER */
+        header {
+            background: var(--dark);
+            color: white;
+            padding: 0 2rem;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            height: 64px;
+            position: sticky;
+            top: 0;
+            z-index: 100;
+            box-shadow: 0 2px 20px rgba(0,0,0,0.3);
+        }
+
+        .logo {
+            font-family: 'Syne', sans-serif;
+            font-weight: 800;
+            font-size: 1.1rem;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .logo-icon {
+            width: 36px;
+            height: 36px;
+            background: var(--green-light);
+            border-radius: 10px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.2rem;
+        }
+
+        .header-badge {
+            background: var(--green-light);
+            color: white;
+            padding: 4px 12px;
+            border-radius: 20px;
+            font-size: 0.75rem;
+            font-weight: 500;
+        }
+
+        /* MAIN LAYOUT */
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 2.5rem 1.5rem;
+        }
+
+        .welcome-section {
+            margin-bottom: 2.5rem;
+            animation: fadeUp 0.5s ease;
+        }
+
+        .welcome-section h1 {
+            font-family: 'Syne', sans-serif;
+            font-size: 2rem;
+            font-weight: 800;
+            color: var(--dark);
+            margin-bottom: 0.4rem;
+        }
+
+        .welcome-section p {
+            color: var(--muted);
+            font-size: 0.95rem;
+        }
+
+        .welcome-section span {
+            color: var(--green);
+            font-weight: 600;
+        }
+
+        /* STATS ROW */
+        .stats-row {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 1rem;
+            margin-bottom: 2rem;
+            animation: fadeUp 0.6s ease;
+        }
+
+        .stat-card {
+            background: white;
+            border-radius: 14px;
+            padding: 1.2rem 1.4rem;
+            border: 1px solid var(--border);
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+            transition: transform 0.2s, box-shadow 0.2s;
+        }
+
+        .stat-card:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 24px rgba(0,0,0,0.08);
+        }
+
+        .stat-icon {
+            width: 44px;
+            height: 44px;
+            border-radius: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.3rem;
+            flex-shrink: 0;
+        }
+
+        .stat-info .label {
+            font-size: 0.75rem;
+            color: var(--muted);
+            margin-bottom: 2px;
+        }
+
+        .stat-info .value {
+            font-family: 'Syne', sans-serif;
+            font-size: 1.4rem;
+            font-weight: 700;
+            color: var(--dark);
+        }
+
+        /* MODULE GRID */
+        .section-title {
+            font-family: 'Syne', sans-serif;
+            font-size: 1rem;
+            font-weight: 700;
+            color: var(--muted);
+            text-transform: uppercase;
+            letter-spacing: 0.08em;
+            margin-bottom: 1rem;
+        }
+
+        .modules-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 1.2rem;
+            margin-bottom: 2rem;
+            animation: fadeUp 0.7s ease;
+        }
+
+        .module-card {
+            background: white;
+            border-radius: 18px;
+            padding: 1.8rem;
+            border: 1px solid var(--border);
+            cursor: pointer;
+            transition: all 0.25s ease;
+            text-decoration: none;
+            color: inherit;
+            display: block;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .module-card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 4px;
+            background: var(--accent, var(--green-light));
+            transform: scaleX(0);
+            transition: transform 0.25s ease;
+            transform-origin: left;
+        }
+
+        .module-card:hover::before {
+            transform: scaleX(1);
+        }
+
+        .module-card:hover {
+            transform: translateY(-4px);
+            box-shadow: 0 12px 32px rgba(0,0,0,0.1);
+            border-color: transparent;
+        }
+
+        .module-card:active {
+            transform: translateY(-1px);
+        }
+
+        .module-icon-wrap {
+            width: 56px;
+            height: 56px;
+            border-radius: 16px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.6rem;
+            margin-bottom: 1.2rem;
+        }
+
+        .module-card h3 {
+            font-family: 'Syne', sans-serif;
+            font-size: 1rem;
+            font-weight: 700;
+            margin-bottom: 0.4rem;
+            color: var(--dark);
+        }
+
+        .module-card p {
+            font-size: 0.82rem;
+            color: var(--muted);
+            line-height: 1.5;
+            margin-bottom: 1.2rem;
+        }
+
+        .module-link {
+            font-size: 0.8rem;
+            font-weight: 600;
+            color: var(--green);
+            display: flex;
+            align-items: center;
+            gap: 4px;
+        }
+
+        .module-link::after {
+            content: '→';
+            transition: transform 0.2s;
+        }
+
+        .module-card:hover .module-link::after {
+            transform: translateX(4px);
+        }
+
+        /* AI BANNER */
+        .ai-banner {
+            background: linear-gradient(135deg, var(--dark) 0%, #16213e 100%);
+            border-radius: 18px;
+            padding: 2rem 2.5rem;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            color: white;
+            animation: fadeUp 0.8s ease;
+            margin-bottom: 2rem;
+        }
+
+        .ai-banner-text h2 {
+            font-family: 'Syne', sans-serif;
+            font-size: 1.3rem;
+            font-weight: 800;
+            margin-bottom: 0.4rem;
+        }
+
+        .ai-banner-text p {
+            font-size: 0.85rem;
+            opacity: 0.7;
+            max-width: 400px;
+        }
+
+        .ai-btn {
+            background: var(--green-light);
+            color: white;
+            border: none;
+            padding: 0.75rem 1.8rem;
+            border-radius: 12px;
+            font-family: 'Syne', sans-serif;
+            font-weight: 700;
+            font-size: 0.9rem;
+            cursor: pointer;
+            transition: all 0.2s;
+            white-space: nowrap;
+            text-decoration: none;
+            display: inline-block;
+        }
+
+        .ai-btn:hover {
+            background: #40916c;
+            transform: translateY(-2px);
+            box-shadow: 0 8px 20px rgba(82,183,136,0.4);
+        }
+
+        .ai-icon {
+            font-size: 3rem;
+            opacity: 0.15;
+            position: absolute;
+            right: 180px;
+        }
+
+        /* FOOTER */
+        footer {
+            text-align: center;
+            padding: 2rem;
+            color: var(--muted);
+            font-size: 0.8rem;
+            border-top: 1px solid var(--border);
+            background: white;
+        }
+
+        /* ANIMATIONS */
+        @keyframes fadeUp {
+            from { opacity: 0; transform: translateY(16px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        /* COLORS per module */
+        .mod-product  { --accent: #52b788; }
+        .mod-payment  { --accent: #f4a261; }
+        .mod-dashboard { --accent: #4895ef; }
+        .mod-delivery { --accent: #7b2d8b; }
+        .mod-order    { --accent: #ef233c; }
+        .mod-farmer   { --accent: #2d6a4f; }
+
+        .ic-product   { background: #d8f3dc; }
+        .ic-payment   { background: #fde8d0; }
+        .ic-dashboard { background: #dbeafe; }
+        .ic-delivery  { background: #f3e8ff; }
+        .ic-order     { background: #fee2e2; }
+        .ic-farmer    { background: #d1fae5; }
+
+        .s-green  { background: #d8f3dc; }
+        .s-yellow { background: #fef3c7; }
+        .s-blue   { background: #dbeafe; }
+        .s-purple { background: #f3e8ff; }
+
+        @media (max-width: 768px) {
+            .modules-grid { grid-template-columns: 1fr 1fr; }
+            .stats-row { grid-template-columns: 1fr 1fr; }
+            .ai-banner { flex-direction: column; gap: 1.2rem; text-align: center; }
+        }
+
+        @media (max-width: 480px) {
+            .modules-grid { grid-template-columns: 1fr; }
+            .stats-row { grid-template-columns: 1fr 1fr; }
+        }
+    </style>
+</head>
+<body>
+
+<header>
+    <div class="logo">
+        <div class="logo-icon">🥦</div>
+        VegWaste MS
+    </div>
+    <span class="header-badge">IT2021 AIML Project · 2026</span>
+</header>
+
+<div class="container">
+
+    <!-- Welcome -->
+    <div class="welcome-section">
+        <h1>System Dashboard</h1>
+        <p>Intelligent Vegetable Wastage Management · <span>Group 13 · Data Science · Malabe</span></p>
+    </div>
+
+    <!-- Stats -->
+    <div class="stats-row">
+        <div class="stat-card">
+            <div class="stat-icon s-green">📦</div>
+            <div class="stat-info">
+                <div class="label">Total Modules</div>
+                <div class="value">6</div>
+            </div>
+        </div>
+        <div class="stat-card">
+            <div class="stat-icon s-yellow">👥</div>
+            <div class="stat-info">
+                <div class="label">Team Members</div>
+                <div class="value">6</div>
+            </div>
+        </div>
+        <div class="stat-card">
+            <div class="stat-icon s-blue">🤖</div>
+            <div class="stat-info">
+                <div class="label">AI Features</div>
+                <div class="value">1</div>
+            </div>
+        </div>
+        <div class="stat-card">
+            <div class="stat-icon s-purple">🔗</div>
+            <div class="stat-info">
+                <div class="label">API Port</div>
+                <div class="value">8080</div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modules -->
+    <div class="section-title">System Modules</div>
+    <div class="modules-grid">
+
+        <!-- Product Listing -->
+        <a href="/index.html" class="module-card mod-product">
+            <div class="module-icon-wrap ic-product">🛒</div>
+            <h3>Product Listing & Search</h3>
+            <p>Browse, filter and manage vegetable listings. Update availability and remove expired stock.</p>
+            <div class="module-link">Open Module</div>
+        </a>
+
+        <!-- Payment -->
+        <a href="/payments" class="module-card mod-payment">
+            <div class="module-icon-wrap ic-payment">💳</div>
+            <h3>Payment & Transaction</h3>
+            <p>Record payments for orders, update payment status and maintain financial transparency.</p>
+            <div class="module-link">Open Module</div>
+        </a>
+
+        <!-- Admin Dashboard -->
+        <a href="/admin" class="module-card mod-dashboard">
+            <div class="module-icon-wrap ic-dashboard">🖥️</div>
+            <h3>User / Admin Dashboard</h3>
+            <p>Register users, manage roles, view profiles and deactivate accounts.</p>
+            <div class="module-link">Open Module</div>
+        </a>
+
+        <!-- Delivery -->
+        <a href="/delivery-assignment.html" class="module-card mod-delivery">
+            <div class="module-icon-wrap ic-delivery">🚚</div>
+            <h3>Delivery & Distribution</h3>
+            <p>Assign orders to agents, track delivery status and optimize distribution routes.</p>
+            <div class="module-link">Open Module</div>
+        </a>
+
+        <!-- Order Management -->
+        <a href="/orders" class="module-card mod-order">
+            <div class="module-icon-wrap ic-order">📋</div>
+            <h3>Order Management</h3>
+            <p>Place and confirm vegetable orders, check stock availability and send notifications.</p>
+            <div class="module-link">Open Module</div>
+        </a>
+
+        <!-- Farmer Stock -->
+        <a href="/farmer/stock" class="module-card mod-farmer">
+            <div class="module-icon-wrap ic-farmer">🌾</div>
+            <h3>Farmer Stock Management</h3>
+            <p>Add harvested vegetables, update stock quantity, adjust prices and manage availability.</p>
+            <div class="module-link">Open Module</div>
+        </a>
+
+    </div>
+
+    <!-- AI Banner -->
+    <div class="ai-banner">
+        <div class="ai-banner-text">
+            <h2>🤖 AI Demand Prediction</h2>
+            <p>Our ML model analyzes stock levels, daily demand, freshness age and shelf life to predict vegetable demand and reduce wastage.</p>
+        </div>
+        <a href="/api/predict" class="ai-btn">Run Prediction →</a>
+    </div>
+
+</div>
+
+<footer>
+    IT2021 AIML Project · 2026 Jan · Group DS-02-G13 · SLIIT Malabe · Intelligent Vegetable Wastage Management System
+</footer>
+
+</body>
+</html>
