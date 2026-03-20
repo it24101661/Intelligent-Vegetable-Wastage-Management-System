@@ -1,0 +1,1491 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>VegOrder — Order Management</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=DM+Sans:ital,wght@0,300;0,400;0,500;1,300&display=swap" rel="stylesheet">
+    <style>
+        /* ===== ROOT & RESET ===== */
+        *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+        :root {
+            --bg: #0d110e;
+            --bg2: #141a15;
+            --surface: #1a221b;
+            --surface2: #202a21;
+            --border: #2a362b;
+            --green: #4ade80;
+            --green-dim: #22c55e;
+            --green-glow: rgba(74,222,128,0.12);
+            --amber: #fbbf24;
+            --red: #f87171;
+            --blue: #60a5fa;
+            --text: #e8f0e9;
+            --text-muted: #7a9a7d;
+            --text-dim: #4d6b50;
+            --font-display: 'Syne', sans-serif;
+            --font-body: 'DM Sans', sans-serif;
+            --r: 12px;
+            --r-lg: 18px;
+        }
+
+        html { font-size: 15px; }
+        body {
+            font-family: var(--font-body);
+            background: var(--bg);
+            color: var(--text);
+            min-height: 100vh;
+            overflow-x: hidden;
+        }
+
+        /* ===== LAYOUT ===== */
+        .shell {
+            display: grid;
+            grid-template-columns: 240px 1fr;
+            min-height: 100vh;
+        }
+
+        /* ===== SIDEBAR ===== */
+        .sidebar {
+            background: var(--bg2);
+            border-right: 1px solid var(--border);
+            display: flex;
+            flex-direction: column;
+            padding: 28px 0;
+            position: sticky;
+            top: 0;
+            height: 100vh;
+        }
+
+        .logo {
+            padding: 0 24px 32px;
+            font-family: var(--font-display);
+            font-size: 1.5rem;
+            font-weight: 800;
+            color: var(--green);
+            letter-spacing: -0.5px;
+        }
+        .logo span { color: var(--text-muted); font-weight: 400; }
+
+        .nav-label {
+            font-size: 0.68rem;
+            font-weight: 600;
+            letter-spacing: 0.12em;
+            text-transform: uppercase;
+            color: var(--text-dim);
+            padding: 0 24px 8px;
+        }
+
+        .nav-item {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            padding: 11px 24px;
+            font-size: 0.9rem;
+            font-weight: 400;
+            color: var(--text-muted);
+            cursor: pointer;
+            border-left: 3px solid transparent;
+            transition: all 0.2s;
+        }
+        .nav-item:hover { background: var(--surface); color: var(--text); }
+        .nav-item.active {
+            background: var(--green-glow);
+            color: var(--green);
+            border-left-color: var(--green);
+            font-weight: 500;
+        }
+        .nav-item .ico { font-size: 1.1rem; width: 20px; text-align: center; }
+        .badge {
+            margin-left: auto;
+            background: var(--red);
+            color: #fff;
+            font-size: 0.65rem;
+            font-weight: 700;
+            border-radius: 99px;
+            padding: 2px 6px;
+            min-width: 18px;
+            text-align: center;
+        }
+
+        .sidebar-bottom {
+            margin-top: auto;
+            padding: 20px 24px;
+            border-top: 1px solid var(--border);
+        }
+        .user-chip {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        .avatar {
+            width: 34px; height: 34px;
+            border-radius: 50%;
+            background: var(--green);
+            display: flex; align-items: center; justify-content: center;
+            font-family: var(--font-display);
+            font-weight: 700;
+            font-size: 0.8rem;
+            color: var(--bg);
+        }
+        .user-info { font-size: 0.82rem; }
+        .user-info strong { display: block; font-weight: 500; color: var(--text); }
+        .user-info small { color: var(--text-dim); }
+
+        /* ===== MAIN ===== */
+        .main {
+            display: flex;
+            flex-direction: column;
+            overflow-y: auto;
+        }
+
+        /* ===== TOPBAR ===== */
+        .topbar {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 20px 36px;
+            border-bottom: 1px solid var(--border);
+            background: var(--bg);
+            position: sticky;
+            top: 0;
+            z-index: 10;
+        }
+        .page-title {
+            font-family: var(--font-display);
+            font-size: 1.2rem;
+            font-weight: 700;
+            color: var(--text);
+        }
+        .topbar-actions { display: flex; gap: 10px; align-items: center; }
+
+        /* ===== BUTTONS ===== */
+        .btn {
+            display: inline-flex;
+            align-items: center;
+            gap: 7px;
+            padding: 9px 18px;
+            border-radius: var(--r);
+            font-family: var(--font-body);
+            font-size: 0.875rem;
+            font-weight: 500;
+            cursor: pointer;
+            border: none;
+            transition: all 0.2s;
+            text-decoration: none;
+        }
+        .btn-primary {
+            background: var(--green);
+            color: var(--bg);
+        }
+        .btn-primary:hover { background: var(--green-dim); transform: translateY(-1px); }
+        .btn-secondary {
+            background: var(--surface);
+            color: var(--text-muted);
+            border: 1px solid var(--border);
+        }
+        .btn-secondary:hover { color: var(--text); border-color: var(--text-dim); }
+        .btn-danger { background: rgba(248,113,113,0.15); color: var(--red); border: 1px solid rgba(248,113,113,0.3); }
+        .btn-danger:hover { background: rgba(248,113,113,0.25); }
+        .btn-sm { padding: 6px 12px; font-size: 0.8rem; border-radius: 8px; }
+        .btn-ghost { background: transparent; color: var(--text-muted); padding: 8px; border-radius: 8px; }
+        .btn-ghost:hover { background: var(--surface); color: var(--text); }
+
+        /* ===== PAGE CONTENT ===== */
+        .page { padding: 32px 36px; display: none; }
+        .page.active { display: block; }
+
+        /* ===== SECTION HEADER ===== */
+        .section-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-bottom: 24px;
+        }
+        .section-title {
+            font-family: var(--font-display);
+            font-size: 1.1rem;
+            font-weight: 700;
+        }
+        .section-sub { color: var(--text-muted); font-size: 0.82rem; margin-top: 2px; }
+
+        /* ===== STATS ROW ===== */
+        .stats-row {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 16px;
+            margin-bottom: 28px;
+        }
+        .stat-card {
+            background: var(--surface);
+            border: 1px solid var(--border);
+            border-radius: var(--r-lg);
+            padding: 20px;
+            position: relative;
+            overflow: hidden;
+        }
+        .stat-card::before {
+            content: '';
+            position: absolute;
+            top: 0; left: 0; right: 0;
+            height: 3px;
+            border-radius: var(--r-lg) var(--r-lg) 0 0;
+        }
+        .stat-card.green::before { background: var(--green); }
+        .stat-card.amber::before { background: var(--amber); }
+        .stat-card.red::before { background: var(--red); }
+        .stat-card.blue::before { background: var(--blue); }
+        .stat-value {
+            font-family: var(--font-display);
+            font-size: 2rem;
+            font-weight: 800;
+            line-height: 1;
+            margin-bottom: 4px;
+        }
+        .stat-card.green .stat-value { color: var(--green); }
+        .stat-card.amber .stat-value { color: var(--amber); }
+        .stat-card.red .stat-value { color: var(--red); }
+        .stat-card.blue .stat-value { color: var(--blue); }
+        .stat-label { font-size: 0.8rem; color: var(--text-muted); }
+
+        /* ===== TABLE ===== */
+        .card {
+            background: var(--surface);
+            border: 1px solid var(--border);
+            border-radius: var(--r-lg);
+            overflow: hidden;
+        }
+        .table-wrap { overflow-x: auto; }
+        table { width: 100%; border-collapse: collapse; }
+        thead th {
+            padding: 12px 20px;
+            text-align: left;
+            font-size: 0.72rem;
+            font-weight: 600;
+            letter-spacing: 0.08em;
+            text-transform: uppercase;
+            color: var(--text-dim);
+            background: var(--surface2);
+            border-bottom: 1px solid var(--border);
+        }
+        tbody tr {
+            border-bottom: 1px solid var(--border);
+            transition: background 0.15s;
+        }
+        tbody tr:last-child { border-bottom: none; }
+        tbody tr:hover { background: var(--surface2); }
+        tbody td {
+            padding: 14px 20px;
+            font-size: 0.875rem;
+            color: var(--text);
+            vertical-align: middle;
+        }
+        .td-muted { color: var(--text-muted); }
+
+        /* ===== STATUS BADGES ===== */
+        .status {
+            display: inline-flex;
+            align-items: center;
+            gap: 5px;
+            padding: 4px 10px;
+            border-radius: 99px;
+            font-size: 0.75rem;
+            font-weight: 600;
+        }
+        .status::before { content: '●'; font-size: 0.55rem; }
+        .status-PENDING { background: rgba(251,191,36,0.15); color: var(--amber); }
+        .status-CONFIRMED { background: rgba(96,165,250,0.15); color: var(--blue); }
+        .status-PACKED { background: rgba(167,139,250,0.15); color: #a78bfa; }
+        .status-SHIPPED { background: rgba(52,211,153,0.15); color: #34d399; }
+        .status-DELIVERED { background: rgba(74,222,128,0.15); color: var(--green); }
+        .status-CANCELLED { background: rgba(248,113,113,0.15); color: var(--red); }
+
+        /* ===== MODAL ===== */
+        .overlay {
+            position: fixed; inset: 0;
+            background: rgba(0,0,0,0.7);
+            backdrop-filter: blur(4px);
+            z-index: 100;
+            display: none;
+            align-items: center;
+            justify-content: center;
+            animation: fadeIn 0.2s;
+        }
+        .overlay.open { display: flex; }
+        @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+
+        .modal {
+            background: var(--bg2);
+            border: 1px solid var(--border);
+            border-radius: 20px;
+            width: 620px;
+            max-width: calc(100vw - 40px);
+            max-height: 90vh;
+            overflow-y: auto;
+            animation: slideUp 0.25s cubic-bezier(0.34, 1.56, 0.64, 1);
+        }
+        @keyframes slideUp { from { transform: translateY(30px); opacity: 0; } to { transform: translateY(0); opacity: 1; } }
+
+        .modal-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 24px 28px;
+            border-bottom: 1px solid var(--border);
+        }
+        .modal-title {
+            font-family: var(--font-display);
+            font-size: 1.1rem;
+            font-weight: 700;
+        }
+        .modal-body { padding: 24px 28px; }
+        .modal-footer {
+            padding: 16px 28px;
+            border-top: 1px solid var(--border);
+            display: flex;
+            justify-content: flex-end;
+            gap: 10px;
+        }
+
+        /* ===== FORMS ===== */
+        .form-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
+        .form-group { display: flex; flex-direction: column; gap: 6px; }
+        .form-group.full { grid-column: 1 / -1; }
+        label { font-size: 0.8rem; font-weight: 500; color: var(--text-muted); }
+        input, select, textarea {
+            background: var(--surface);
+            border: 1px solid var(--border);
+            border-radius: var(--r);
+            padding: 10px 14px;
+            font-family: var(--font-body);
+            font-size: 0.875rem;
+            color: var(--text);
+            transition: border-color 0.2s;
+            outline: none;
+        }
+        input:focus, select:focus, textarea:focus {
+            border-color: var(--green);
+            box-shadow: 0 0 0 3px var(--green-glow);
+        }
+        select option { background: var(--bg2); }
+        textarea { resize: vertical; min-height: 72px; }
+
+        /* ===== CART ITEMS ===== */
+        .cart-items { display: flex; flex-direction: column; gap: 10px; margin-bottom: 16px; }
+        .cart-item {
+            display: grid;
+            grid-template-columns: 1fr 100px 32px;
+            gap: 10px;
+            align-items: center;
+            background: var(--surface);
+            border: 1px solid var(--border);
+            border-radius: var(--r);
+            padding: 12px 14px;
+        }
+        .add-item-btn {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            padding: 10px;
+            border: 1px dashed var(--border);
+            border-radius: var(--r);
+            color: var(--text-dim);
+            font-size: 0.85rem;
+            cursor: pointer;
+            transition: all 0.2s;
+            background: none;
+            width: 100%;
+        }
+        .add-item-btn:hover { border-color: var(--green); color: var(--green); }
+
+        /* ===== VEGETABLE GRID ===== */
+        .veg-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
+            gap: 14px;
+            margin-bottom: 28px;
+        }
+        .veg-card {
+            background: var(--surface);
+            border: 1px solid var(--border);
+            border-radius: var(--r-lg);
+            padding: 18px;
+            transition: all 0.2s;
+            cursor: pointer;
+            position: relative;
+        }
+        .veg-card:hover { border-color: var(--green); transform: translateY(-2px); box-shadow: 0 8px 24px rgba(0,0,0,0.3); }
+        .veg-icon { font-size: 2.2rem; margin-bottom: 10px; }
+        .veg-name { font-weight: 600; font-size: 0.9rem; margin-bottom: 4px; }
+        .veg-price { color: var(--green); font-size: 0.85rem; font-weight: 500; }
+        .veg-stock { font-size: 0.75rem; color: var(--text-dim); margin-top: 4px; }
+        .stock-low { color: var(--amber) !important; }
+        .stock-out { color: var(--red) !important; }
+
+        /* ===== AI SUGGESTION CARD ===== */
+        .suggestion-card {
+            background: linear-gradient(135deg, rgba(74,222,128,0.06), rgba(74,222,128,0.02));
+            border: 1px solid rgba(74,222,128,0.2);
+            border-radius: var(--r-lg);
+            padding: 20px;
+            margin-bottom: 24px;
+        }
+        .suggestion-header {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            margin-bottom: 16px;
+        }
+        .suggestion-header h3 {
+            font-family: var(--font-display);
+            font-size: 1rem;
+            font-weight: 700;
+            color: var(--green);
+        }
+        .ai-badge {
+            background: rgba(74,222,128,0.15);
+            color: var(--green);
+            font-size: 0.65rem;
+            font-weight: 700;
+            letter-spacing: 0.1em;
+            padding: 3px 8px;
+            border-radius: 99px;
+        }
+        .suggestions-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(160px, 1fr)); gap: 10px; }
+        .sug-item {
+            background: var(--surface2);
+            border: 1px solid var(--border);
+            border-radius: var(--r);
+            padding: 12px;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+        .sug-item:hover { border-color: var(--green); }
+        .sug-item-name { font-weight: 500; font-size: 0.85rem; margin-bottom: 4px; }
+        .sug-qty { color: var(--green); font-size: 1rem; font-weight: 700; }
+        .sug-meta { font-size: 0.72rem; color: var(--text-dim); margin-top: 2px; }
+        .confidence-bar { height: 3px; background: var(--border); border-radius: 99px; margin-top: 8px; overflow: hidden; }
+        .confidence-fill { height: 100%; background: var(--green); border-radius: 99px; transition: width 0.6s; }
+
+        /* ===== NOTIFICATION LIST ===== */
+        .notif-list { display: flex; flex-direction: column; gap: 10px; }
+        .notif-item {
+            display: flex;
+            gap: 14px;
+            padding: 16px;
+            background: var(--surface);
+            border: 1px solid var(--border);
+            border-radius: var(--r);
+            transition: background 0.2s;
+        }
+        .notif-item.unread { border-left: 3px solid var(--green); background: rgba(74,222,128,0.04); }
+        .notif-icon {
+            width: 38px; height: 38px; border-radius: 10px;
+            display: flex; align-items: center; justify-content: center;
+            font-size: 1.1rem;
+            flex-shrink: 0;
+        }
+        .notif-confirm .notif-icon { background: rgba(96,165,250,0.15); }
+        .notif-ship .notif-icon { background: rgba(52,211,153,0.15); }
+        .notif-deliver .notif-icon { background: rgba(74,222,128,0.15); }
+        .notif-cancel .notif-icon { background: rgba(248,113,113,0.15); }
+        .notif-ai .notif-icon { background: rgba(167,139,250,0.15); }
+        .notif-title { font-weight: 500; font-size: 0.875rem; margin-bottom: 3px; }
+        .notif-msg { font-size: 0.8rem; color: var(--text-muted); line-height: 1.4; }
+        .notif-time { font-size: 0.72rem; color: var(--text-dim); margin-top: 6px; }
+
+        /* ===== ORDER DETAIL ===== */
+        .order-detail-header {
+            display: flex;
+            align-items: flex-start;
+            justify-content: space-between;
+            margin-bottom: 28px;
+            gap: 16px;
+        }
+        .order-meta { display: flex; flex-direction: column; gap: 6px; }
+        .order-number {
+            font-family: var(--font-display);
+            font-size: 1.4rem;
+            font-weight: 800;
+        }
+        .order-date { color: var(--text-muted); font-size: 0.85rem; }
+        .order-actions { display: flex; gap: 8px; }
+
+        .timeline {
+            display: flex;
+            gap: 0;
+            margin-bottom: 28px;
+            background: var(--surface);
+            border: 1px solid var(--border);
+            border-radius: var(--r-lg);
+            padding: 20px 24px;
+            overflow-x: auto;
+        }
+        .step {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            position: relative;
+            min-width: 80px;
+        }
+        .step::after {
+            content: '';
+            position: absolute;
+            top: 16px;
+            left: 50%;
+            right: -50%;
+            height: 2px;
+            background: var(--border);
+            z-index: 0;
+        }
+        .step:last-child::after { display: none; }
+        .step.done::after { background: var(--green); }
+        .step-dot {
+            width: 32px; height: 32px;
+            border-radius: 50%;
+            background: var(--surface2);
+            border: 2px solid var(--border);
+            display: flex; align-items: center; justify-content: center;
+            font-size: 0.85rem;
+            position: relative;
+            z-index: 1;
+        }
+        .step.done .step-dot { background: var(--green); border-color: var(--green); color: var(--bg); }
+        .step.current .step-dot { border-color: var(--amber); box-shadow: 0 0 0 4px rgba(251,191,36,0.2); background: rgba(251,191,36,0.15); color: var(--amber); }
+        .step-label { font-size: 0.7rem; color: var(--text-dim); margin-top: 8px; text-align: center; }
+        .step.done .step-label { color: var(--green); }
+        .step.current .step-label { color: var(--amber); font-weight: 600; }
+
+        /* ===== EMPTY STATE ===== */
+        .empty {
+            text-align: center;
+            padding: 60px 20px;
+            color: var(--text-dim);
+        }
+        .empty-icon { font-size: 3rem; margin-bottom: 12px; }
+        .empty-title { font-family: var(--font-display); font-size: 1rem; font-weight: 700; color: var(--text-muted); margin-bottom: 6px; }
+        .empty-desc { font-size: 0.85rem; }
+
+        /* ===== TOAST ===== */
+        .toast-container {
+            position: fixed;
+            bottom: 24px;
+            right: 24px;
+            z-index: 999;
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+        }
+        .toast {
+            background: var(--surface);
+            border: 1px solid var(--border);
+            border-radius: var(--r);
+            padding: 14px 18px;
+            font-size: 0.875rem;
+            min-width: 280px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            animation: slideUp 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
+            box-shadow: 0 8px 32px rgba(0,0,0,0.4);
+        }
+        .toast.success { border-left: 3px solid var(--green); }
+        .toast.error { border-left: 3px solid var(--red); }
+        .toast.info { border-left: 3px solid var(--blue); }
+
+        /* ===== SCROLLBAR ===== */
+        ::-webkit-scrollbar { width: 6px; height: 6px; }
+        ::-webkit-scrollbar-track { background: var(--bg); }
+        ::-webkit-scrollbar-thumb { background: var(--border); border-radius: 3px; }
+        ::-webkit-scrollbar-thumb:hover { background: var(--text-dim); }
+
+        /* ===== ANIMATIONS ===== */
+        @keyframes pulse { 0%,100% { opacity:1 } 50% { opacity: 0.5 } }
+        .loading { animation: pulse 1.5s infinite; }
+    </style>
+</head>
+<body>
+
+<div class="shell">
+    <!-- SIDEBAR -->
+    <aside class="sidebar">
+        <div class="logo">Veg<span>Order</span></div>
+        <div class="nav-label">Menu</div>
+        <div class="nav-item active" onclick="showPage('dashboard')">
+            <span class="ico">📊</span> Dashboard
+        </div>
+        <div class="nav-item" onclick="showPage('place-order')">
+            <span class="ico">🛒</span> Place Order
+        </div>
+        <div class="nav-item" onclick="showPage('orders')">
+            <span class="ico">📦</span> My Orders
+        </div>
+        <div class="nav-item" onclick="showPage('vegetables')">
+            <span class="ico">🥕</span> Products
+        </div>
+        <div class="nav-item" onclick="showPage('notifications')">
+            <span class="ico">🔔</span> Notifications
+            <span class="badge" id="notif-badge" style="display:none">3</span>
+        </div>
+        <div class="nav-item" onclick="showPage('ai-suggestions')">
+            <span class="ico">🤖</span> AI Suggestions
+        </div>
+        <div class="nav-item" onclick="showPage('admin')">
+            <span class="ico">⚙️</span> Admin Panel
+        </div>
+
+    </aside>
+
+    <!-- MAIN -->
+    <main class="main">
+        <div class="topbar">
+            <div class="page-title" id="page-title">Dashboard</div>
+            <div class="topbar-actions">
+                <button class="btn btn-ghost" onclick="showPage('notifications')">🔔</button>
+                <button class="btn btn-primary" onclick="showPage('place-order')">+ New Order</button>
+            </div>
+        </div>
+
+        <!-- ===== DASHBOARD PAGE ===== -->
+        <div class="page active" id="page-dashboard">
+            <div class="stats-row">
+                <div class="stat-card green">
+                    <div class="stat-value" id="stat-total">0</div>
+                    <div class="stat-label">Total Orders</div>
+                </div>
+                <div class="stat-card amber">
+                    <div class="stat-value" id="stat-pending">0</div>
+                    <div class="stat-label">Pending</div>
+                </div>
+                <div class="stat-card blue">
+                    <div class="stat-value" id="stat-transit">0</div>
+                    <div class="stat-label">In Transit</div>
+                </div>
+                <div class="stat-card red">
+                    <div class="stat-value" id="stat-delivered">0</div>
+                    <div class="stat-label">Delivered</div>
+                </div>
+            </div>
+            <div class="card">
+                <div style="padding: 20px 20px 0; display:flex; justify-content:space-between; align-items:center;">
+                    <div class="section-title">Recent Orders</div>
+                    <button class="btn btn-secondary btn-sm" onclick="showPage('orders')">View All</button>
+                </div>
+                <div class="table-wrap">
+                    <table>
+                        <thead>
+                        <tr>
+                            <th>Order #</th>
+                            <th>Date</th>
+                            <th>Items</th>
+                            <th>Amount</th>
+                            <th>Delivery</th>
+                            <th>Status</th>
+                            <th></th>
+                        </tr>
+                        </thead>
+                        <tbody id="dashboard-orders-body">
+                        <tr><td colspan="7"><div class="loading" style="padding:20px;text-align:center;color:var(--text-dim)">Loading orders…</div></td></tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+
+        <!-- ===== PLACE ORDER PAGE ===== -->
+        <div class="page" id="page-place-order">
+            <div class="suggestion-card" id="inline-suggestions" style="display:none">
+                <div class="suggestion-header">
+                    <span style="font-size:1.5rem">🤖</span>
+                    <h3>AI Demand Suggestions</h3>
+                    <span class="ai-badge">AIML</span>
+                </div>
+                <p style="font-size:0.82rem;color:var(--text-muted);margin-bottom:14px">Based on your order history, here's what you might need:</p>
+                <div class="suggestions-grid" id="place-suggestions-grid"></div>
+            </div>
+
+            <div class="card" style="padding: 28px;">
+                <div class="section-header">
+                    <div>
+                        <div class="section-title">New Order</div>
+                        <div class="section-sub">Select vegetables, set quantity and delivery date</div>
+                    </div>
+                </div>
+
+                <div class="form-grid">
+                    <div class="form-group">
+                        <label>Delivery Date</label>
+                        <input type="date" id="order-delivery-date">
+                    </div>
+                    <div class="form-group">
+                        <label>Delivery Address</label>
+                        <input type="text" id="order-delivery-address" placeholder="Enter delivery address">
+                    </div>
+                    <div class="form-group full">
+                        <label>Order Notes (optional)</label>
+                        <textarea id="order-notes" placeholder="Special instructions…"></textarea>
+                    </div>
+                </div>
+
+                <div style="margin: 20px 0 10px; font-size:0.85rem; font-weight:500; color:var(--text-muted)">ORDER ITEMS</div>
+                <div class="cart-items" id="cart-items"></div>
+                <button class="add-item-btn" onclick="addCartItem()">+ Add Vegetable</button>
+
+                <div style="display:flex; align-items:center; justify-content:space-between; margin-top:24px; padding-top:20px; border-top:1px solid var(--border)">
+                    <div>
+                        <div style="font-size:0.8rem;color:var(--text-muted)">Order Total</div>
+                        <div style="font-family:var(--font-display);font-size:1.5rem;font-weight:800;color:var(--green)" id="order-total">Rs. 0.00</div>
+                    </div>
+                    <button class="btn btn-primary" onclick="submitOrder()" style="padding:12px 28px;font-size:1rem;">
+                        Place Order →
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <!-- ===== MY ORDERS PAGE ===== -->
+        <div class="page" id="page-orders">
+            <div class="card">
+                <div style="padding:20px; display:flex; gap:10px; align-items:center; border-bottom:1px solid var(--border)">
+                    <select id="status-filter" onchange="filterOrders()" style="min-width:160px">
+                        <option value="">All Statuses</option>
+                        <option>PENDING</option>
+                        <option>CONFIRMED</option>
+                        <option>PACKED</option>
+                        <option>SHIPPED</option>
+                        <option>DELIVERED</option>
+                        <option>CANCELLED</option>
+                    </select>
+                </div>
+                <div class="table-wrap">
+                    <table>
+                        <thead>
+                        <tr>
+                            <th>Order #</th>
+                            <th>Date</th>
+                            <th>Items</th>
+                            <th>Total</th>
+                            <th>Delivery Date</th>
+                            <th>Status</th>
+                            <th>Actions</th>
+                        </tr>
+                        </thead>
+                        <tbody id="orders-body"></tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+
+        <!-- ===== VEGETABLES PAGE ===== -->
+        <div class="page" id="page-vegetables">
+            <div class="section-header">
+                <div>
+                    <div class="section-title">Available Products</div>
+                    <div class="section-sub">Live stock from farmers</div>
+                </div>
+                <input type="text" placeholder="Search vegetables…" oninput="filterVegs(this.value)" style="width:220px">
+            </div>
+            <div class="veg-grid" id="veg-grid"></div>
+        </div>
+
+        <!-- ===== NOTIFICATIONS PAGE ===== -->
+        <div class="page" id="page-notifications">
+            <div class="section-header">
+                <div>
+                    <div class="section-title">Notifications</div>
+                    <div class="section-sub" id="notif-count-label"></div>
+                </div>
+                <button class="btn btn-secondary btn-sm" onclick="markAllRead()">Mark all read</button>
+            </div>
+            <div class="notif-list" id="notif-list"></div>
+        </div>
+
+        <!-- ===== AI SUGGESTIONS PAGE ===== -->
+        <div class="page" id="page-ai-suggestions">
+            <div class="suggestion-card">
+                <div class="suggestion-header">
+                    <span style="font-size:1.8rem">🤖</span>
+                    <div>
+                        <h3>AI Demand Planner</h3>
+                        <p style="font-size:0.8rem;color:var(--text-muted);margin-top:2px">Smart quantity predictions based on your buying patterns</p>
+                    </div>
+                    <span class="ai-badge" style="margin-left:auto">AIML</span>
+                </div>
+                <div style="display:flex;gap:12px;align-items:center;margin-bottom:16px">
+                    <label style="color:var(--text-muted);font-size:0.85rem">Analysis period:</label>
+                    <select id="ai-months" onchange="loadSuggestions()" style="width:auto">
+                        <option value="1">Last 1 month</option>
+                        <option value="3" selected>Last 3 months</option>
+                        <option value="6">Last 6 months</option>
+                    </select>
+                </div>
+                <div class="suggestions-grid" id="ai-suggestions-grid">
+                    <div class="empty" style="grid-column:1/-1;padding:40px">
+                        <div class="empty-icon">📊</div>
+                        <div class="empty-title">No history yet</div>
+                        <div class="empty-desc">Place orders to unlock AI-powered demand predictions</div>
+                    </div>
+                </div>
+            </div>
+            <div style="padding:12px 0;font-size:0.8rem;color:var(--text-dim);text-align:center">
+                AI suggestions use a rolling average + 10% waste-reduction buffer. Confidence increases with more order history.
+            </div>
+        </div>
+
+        <!-- ===== ADMIN PAGE ===== -->
+        <div class="page" id="page-admin">
+            <div class="section-header">
+                <div class="section-title">Admin — Update Order Status</div>
+            </div>
+            <div class="card">
+                <div class="table-wrap">
+                    <table>
+                        <thead>
+                        <tr><th>Order #</th><th>Buyer ID</th><th>Total</th><th>Current Status</th><th>Update Status</th></tr>
+                        </thead>
+                        <tbody id="admin-orders-body"></tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </main>
+</div>
+
+<!-- ORDER DETAIL MODAL -->
+<div class="overlay" id="detail-modal">
+    <div class="modal" style="width:700px">
+        <div class="modal-header">
+            <div class="modal-title">Order Details</div>
+            <button class="btn btn-ghost" onclick="closeModal('detail-modal')">✕</button>
+        </div>
+        <div class="modal-body" id="detail-modal-body"></div>
+    </div>
+</div>
+
+<!-- CANCEL MODAL -->
+<div class="overlay" id="cancel-modal">
+    <div class="modal" style="width:420px">
+        <div class="modal-header">
+            <div class="modal-title">Cancel Order</div>
+            <button class="btn btn-ghost" onclick="closeModal('cancel-modal')">✕</button>
+        </div>
+        <div class="modal-body">
+            <p style="color:var(--text-muted);margin-bottom:16px;font-size:0.875rem">Please provide a reason for cancellation:</p>
+            <textarea id="cancel-reason" placeholder="Reason for cancellation…" style="width:100%"></textarea>
+        </div>
+        <div class="modal-footer">
+            <button class="btn btn-secondary" onclick="closeModal('cancel-modal')">Back</button>
+            <button class="btn btn-danger" onclick="confirmCancel()">Cancel Order</button>
+        </div>
+    </div>
+</div>
+
+<div class="toast-container" id="toasts"></div>
+
+<script>
+    // ============================================================
+    // CONFIG
+    // ============================================================
+    const API = 'http://localhost:8081/api';
+    const BUYER_ID = 3; // logged in buyer
+
+    // ============================================================
+    // STATE
+    // ============================================================
+    let allOrders = [];
+    let allVegs = [];
+    let allNotifs = [];
+    let cartItems = [];
+    let cancelTargetId = null;
+
+    // ============================================================
+    // DEMO DATA (used when backend not connected)
+    // ============================================================
+    const DEMO_VEGS = [
+        { id: 1, name: 'Tomatoes', category: 'Fruit', unit: 'kg', pricePerUnit: 120, availableStock: 500, icon: '🍅' },
+        { id: 2, name: 'Carrots', category: 'Root', unit: 'kg', pricePerUnit: 85, availableStock: 300, icon: '🥕' },
+        { id: 3, name: 'Cabbage', category: 'Leafy', unit: 'piece', pricePerUnit: 60, availableStock: 200, icon: '🥬' },
+        { id: 4, name: 'Beans', category: 'Pod', unit: 'kg', pricePerUnit: 150, availableStock: 150, icon: '🫘' },
+        { id: 5, name: 'Brinjal', category: 'Fruit', unit: 'kg', pricePerUnit: 95, availableStock: 250, icon: '🍆' },
+        { id: 6, name: 'Leeks', category: 'Bulb', unit: 'bundle', pricePerUnit: 45, availableStock: 180, icon: '🧅' },
+        { id: 7, name: 'Pumpkin', category: 'Fruit', unit: 'kg', pricePerUnit: 55, availableStock: 400, icon: '🎃' },
+        { id: 8, name: 'Bitter Gourd', category: 'Fruit', unit: 'kg', pricePerUnit: 130, availableStock: 5, icon: '🫑' },
+    ];
+
+    const DEMO_ORDERS = [
+        { id: 1, orderNumber: 'VO-20260201-1234', buyerId: 3, status: 'DELIVERED', totalAmount: 1850, deliveryDate: '2026-02-03', createdAt: '2026-02-01T09:30:00', canModifyUntil: null, items: [{vegetableId:1,quantity:5,unitPrice:120},{vegetableId:2,quantity:8,unitPrice:85}] },
+        { id: 2, orderNumber: 'VO-20260210-5678', buyerId: 3, status: 'SHIPPED', totalAmount: 2340, deliveryDate: '2026-02-15', createdAt: '2026-02-10T14:00:00', canModifyUntil: null, items: [{vegetableId:3,quantity:10,unitPrice:60},{vegetableId:4,quantity:6,unitPrice:150},{vegetableId:5,quantity:8,unitPrice:95}] },
+        { id: 3, orderNumber: 'VO-20260218-9012', buyerId: 3, status: 'CONFIRMED', totalAmount: 960, deliveryDate: '2026-02-28', createdAt: '2026-02-18T11:00:00', canModifyUntil: '2026-12-01T12:00:00', items: [{vegetableId:1,quantity:8,unitPrice:120}] },
+        { id: 4, orderNumber: 'VO-20260224-3456', buyerId: 3, status: 'PENDING', totalAmount: 675, deliveryDate: '2026-03-01', createdAt: '2026-02-24T16:45:00', canModifyUntil: '2026-12-01T17:15:00', items: [{vegetableId:6,quantity:5,unitPrice:45},{vegetableId:2,quantity:6,unitPrice:85}] },
+    ];
+
+    const DEMO_NOTIFS = [
+        { id: 1, title: 'Order Delivered 🎉', message: 'VO-20260201-1234 has been delivered. Enjoy your fresh vegetables!', type: 'ORDER_DELIVERED', isRead: false, createdAt: '2026-02-03T14:00:00' },
+        { id: 2, title: 'Order On the Way 🚚', message: 'VO-20260210-5678 is shipped and out for delivery.', type: 'ORDER_SHIPPED', isRead: false, createdAt: '2026-02-13T09:00:00' },
+        { id: 3, title: 'Order Confirmed ✅', message: 'VO-20260218-9012 confirmed. Total: Rs. 960', type: 'ORDER_CONFIRMED', isRead: true, createdAt: '2026-02-18T11:05:00' },
+        { id: 4, title: 'AI Suggestion 🤖', message: 'Based on your history, consider ordering 12kg Tomatoes and 10kg Carrots this week.', type: 'DEMAND_SUGGESTION', isRead: true, createdAt: '2026-02-20T08:00:00' },
+    ];
+
+    const DEMO_SUGGESTIONS = [
+        { vegetableId: 1, vegetableName: 'Tomatoes', unit: 'kg', suggestedQuantity: 14.3, averageMonthlyQuantity: 13, basedOnMonths: 3, confidenceScore: 85 },
+        { vegetableId: 2, vegetableName: 'Carrots', unit: 'kg', suggestedQuantity: 11, averageMonthlyQuantity: 10, basedOnMonths: 3, confidenceScore: 78 },
+        { vegetableId: 3, vegetableName: 'Cabbage', unit: 'piece', suggestedQuantity: 7.7, averageMonthlyQuantity: 7, basedOnMonths: 2, confidenceScore: 55 },
+    ];
+
+    // ============================================================
+    // INIT
+    // ============================================================
+    document.addEventListener('DOMContentLoaded', () => {
+        // Set min date to today
+        document.getElementById('order-delivery-date').min = new Date().toISOString().split('T')[0];
+        loadAll();
+    });
+
+    async function loadAll() {
+        await Promise.all([loadVegetables(), loadOrders(), loadNotifications()]);
+        renderDashboard();
+        renderVegeables();
+        renderOrdersPage();
+        renderNotifications();
+        addCartItem(); // Start with one empty row
+    }
+
+    // ============================================================
+    // DATA LOADING (falls back to demo data)
+    // ============================================================
+    async function loadVegetables() {
+        try {
+            const r = await fetch(`${API}/vegetables`);
+            const d = await r.json();
+            if (d.success) { allVegs = d.data; return; }
+        } catch(e) {}
+        allVegs = DEMO_VEGS;
+    }
+
+    async function loadOrders() {
+        try {
+            const r = await fetch(`${API}/orders/buyer/${BUYER_ID}`);
+            const d = await r.json();
+            if (d.success) { allOrders = d.data; return; }
+        } catch(e) {}
+        allOrders = DEMO_ORDERS;
+    }
+
+    async function loadNotifications() {
+        try {
+            const r = await fetch(`${API}/notifications/user/${BUYER_ID}`);
+            const d = await r.json();
+            if (d.success) { allNotifs = d.data; return; }
+        } catch(e) {}
+        allNotifs = DEMO_NOTIFS;
+    }
+
+    async function loadSuggestions() {
+        const months = document.getElementById('ai-months')?.value || 3;
+        try {
+            const r = await fetch(`${API}/orders/suggestions/${BUYER_ID}?months=${months}`);
+            const d = await r.json();
+            if (d.success && d.data.length) { renderSuggestionsGrid(d.data, 'ai-suggestions-grid'); return; }
+        } catch(e) {}
+        renderSuggestionsGrid(DEMO_SUGGESTIONS, 'ai-suggestions-grid');
+    }
+
+    // ============================================================
+    // NAVIGATION
+    // ============================================================
+    const pageTitles = {
+        dashboard: 'Dashboard', 'place-order': 'Place Order',
+        orders: 'My Orders', vegetables: 'Products',
+        notifications: 'Notifications', 'ai-suggestions': 'AI Demand Planner', admin: 'Admin Panel'
+    };
+
+    function showPage(name) {
+        document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+        document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
+        document.getElementById(`page-${name}`).classList.add('active');
+        document.querySelectorAll('.nav-item').forEach(n => {
+            if (n.textContent.toLowerCase().includes(pageTitles[name]?.split(' ')[0].toLowerCase())) {
+                n.classList.add('active');
+            }
+        });
+        document.getElementById('page-title').textContent = pageTitles[name] || name;
+
+        if (name === 'ai-suggestions') loadSuggestions();
+        if (name === 'admin') renderAdmin();
+        if (name === 'place-order') loadInlineSuggestions();
+    }
+
+    // ============================================================
+    // DASHBOARD
+    // ============================================================
+    function renderDashboard() {
+        document.getElementById('stat-total').textContent = allOrders.length;
+        document.getElementById('stat-pending').textContent = allOrders.filter(o => o.status === 'PENDING').length;
+        document.getElementById('stat-transit').textContent = allOrders.filter(o => ['CONFIRMED','PACKED','SHIPPED'].includes(o.status)).length;
+        document.getElementById('stat-delivered').textContent = allOrders.filter(o => o.status === 'DELIVERED').length;
+
+        const recent = [...allOrders].slice(0, 5);
+        const tbody = document.getElementById('dashboard-orders-body');
+        if (!recent.length) {
+            tbody.innerHTML = '<tr><td colspan="7"><div class="empty"><div class="empty-icon">📦</div><div class="empty-title">No orders yet</div></div></td></tr>';
+            return;
+        }
+        tbody.innerHTML = recent.map(o => `
+    <tr>
+      <td><span style="font-family:var(--font-display);font-size:0.8rem;font-weight:600">${o.orderNumber}</span></td>
+      <td class="td-muted">${fmtDate(o.createdAt)}</td>
+      <td class="td-muted">${o.items?.length || 0} item(s)</td>
+      <td><strong>Rs. ${Number(o.totalAmount).toLocaleString()}</strong></td>
+      <td class="td-muted">${fmtDate(o.deliveryDate)}</td>
+      <td><span class="status status-${o.status}">${o.status}</span></td>
+      <td><button class="btn btn-secondary btn-sm" onclick="viewOrder(${o.id})">View</button></td>
+    </tr>`).join('');
+    }
+
+    // ============================================================
+    // VEGETABLES
+    // ============================================================
+    function renderVegeables(filter = '') {
+        const grid = document.getElementById('veg-grid');
+        const filtered = allVegs.filter(v => v.name.toLowerCase().includes(filter.toLowerCase()));
+        if (!filtered.length) {
+            grid.innerHTML = '<div class="empty" style="grid-column:1/-1"><div class="empty-icon">🔍</div><div class="empty-title">No vegetables found</div></div>';
+            return;
+        }
+        const icons = ['🍅','🥕','🥬','🫘','🍆','🧅','🎃','🫑','🌽','🥦','🧄','🫛'];
+        grid.innerHTML = filtered.map((v, i) => {
+            const stockClass = v.availableStock <= 10 ? (v.availableStock <= 0 ? 'stock-out' : 'stock-low') : '';
+            return `
+    <div class="veg-card" onclick="addVegToCart(${v.id})">
+      <div class="veg-icon">${v.icon || icons[i % icons.length]}</div>
+      <div class="veg-name">${v.name}</div>
+      <div class="veg-price">Rs. ${v.pricePerUnit} / ${v.unit}</div>
+      <div class="veg-stock ${stockClass}">Stock: ${v.availableStock} ${v.unit}</div>
+    </div>`;
+        }).join('');
+    }
+
+    function filterVegs(q) { renderVegeables(q); }
+
+    // ============================================================
+    // ORDERS LIST
+    // ============================================================
+    function renderOrdersPage() {
+        const filter = document.getElementById('status-filter')?.value || '';
+        const orders = filter ? allOrders.filter(o => o.status === filter) : allOrders;
+        const tbody = document.getElementById('orders-body');
+        if (!orders.length) {
+            tbody.innerHTML = '<tr><td colspan="7"><div class="empty"><div class="empty-icon">📦</div><div class="empty-title">No orders found</div></div></td></tr>';
+            return;
+        }
+        tbody.innerHTML = orders.map(o => {
+            const canMod = o.canModifyUntil && new Date(o.canModifyUntil) > new Date() && !['CANCELLED','DELIVERED'].includes(o.status);
+            return `
+    <tr>
+      <td><span style="font-family:var(--font-display);font-weight:700;font-size:0.82rem">${o.orderNumber}</span></td>
+      <td class="td-muted">${fmtDate(o.createdAt)}</td>
+      <td class="td-muted">${o.items?.length || 0} items</td>
+      <td><strong>Rs. ${Number(o.totalAmount).toLocaleString()}</strong></td>
+      <td class="td-muted">${fmtDate(o.deliveryDate)}</td>
+      <td><span class="status status-${o.status}">${o.status}</span></td>
+      <td style="display:flex;gap:6px">
+        <button class="btn btn-secondary btn-sm" onclick="viewOrder(${o.id})">View</button>
+        ${canMod ? `<button class="btn btn-danger btn-sm" onclick="startCancel(${o.id})">Cancel</button>` : ''}
+      </td>
+    </tr>`;
+        }).join('');
+    }
+
+    function filterOrders() { renderOrdersPage(); }
+
+    // ============================================================
+    // ORDER DETAIL
+    // ============================================================
+    function viewOrder(id) {
+        const o = allOrders.find(x => x.id === id);
+        if (!o) return;
+        const steps = ['PENDING','CONFIRMED','PACKED','SHIPPED','DELIVERED'];
+        const curIdx = steps.indexOf(o.status);
+        const isCancelled = o.status === 'CANCELLED';
+
+        const timeline = isCancelled
+            ? `<div style="padding:16px;text-align:center"><span class="status status-CANCELLED">Order Cancelled</span></div>`
+            : `<div class="timeline">
+        ${steps.map((s, i) => {
+                const cls = i < curIdx ? 'done' : (i === curIdx ? 'current' : '');
+                const icons2 = ['📝','✅','📦','🚚','🎉'];
+                return `<div class="step ${cls}"><div class="step-dot">${i <= curIdx ? icons2[i] : ''}</div><div class="step-label">${s}</div></div>`;
+            }).join('')}
+       </div>`;
+
+        const itemsHtml = (o.items || []).map(item => {
+            const veg = allVegs.find(v => v.id === item.vegetableId) || { name: `Veg #${item.vegetableId}`, unit: '' };
+            return `<tr>
+      <td>${veg.name}</td>
+      <td class="td-muted">${item.quantity} ${veg.unit}</td>
+      <td class="td-muted">Rs. ${item.unitPrice}</td>
+      <td><strong>Rs. ${(item.quantity * item.unitPrice).toFixed(2)}</strong></td>
+    </tr>`;
+        }).join('');
+
+        const canMod = o.canModifyUntil && new Date(o.canModifyUntil) > new Date() && !isCancelled;
+        const timeLeft = canMod ? getTimeLeft(o.canModifyUntil) : '';
+
+        document.getElementById('detail-modal-body').innerHTML = `
+    <div class="order-detail-header">
+      <div class="order-meta">
+        <div class="order-number">${o.orderNumber}</div>
+        <div class="order-date">Placed: ${fmtDateTime(o.createdAt)}</div>
+        <div class="order-date">Delivery: ${fmtDate(o.deliveryDate)}</div>
+        ${o.deliveryAddress ? `<div class="order-date">📍 ${o.deliveryAddress}</div>` : ''}
+      </div>
+      <div class="order-actions">
+        <span class="status status-${o.status}">${o.status}</span>
+        ${canMod ? `<button class="btn btn-danger btn-sm" onclick="closeModal('detail-modal');startCancel(${o.id})">Cancel</button>` : ''}
+      </div>
+    </div>
+    ${canMod ? `<div style="background:rgba(251,191,36,0.1);border:1px solid rgba(251,191,36,0.2);border-radius:10px;padding:10px 14px;font-size:0.8rem;color:var(--amber);margin-bottom:20px">⏱ You can modify this order for ${timeLeft}</div>` : ''}
+    ${timeline}
+    <div style="font-size:0.82rem;font-weight:600;color:var(--text-dim);letter-spacing:0.08em;margin-bottom:12px">ORDER ITEMS</div>
+    <div class="card" style="margin-bottom:16px">
+      <table style="width:100%">
+        <thead><tr><th>Item</th><th>Qty</th><th>Unit Price</th><th>Subtotal</th></tr></thead>
+        <tbody>${itemsHtml}</tbody>
+      </table>
+    </div>
+    <div style="text-align:right">
+      <div style="font-size:0.8rem;color:var(--text-muted)">Order Total</div>
+      <div style="font-family:var(--font-display);font-size:1.6rem;font-weight:800;color:var(--green)">Rs. ${Number(o.totalAmount).toLocaleString()}</div>
+    </div>
+    ${o.notes ? `<div style="margin-top:14px;font-size:0.8rem;color:var(--text-muted)">Notes: ${o.notes}</div>` : ''}
+    ${o.cancellationReason ? `<div style="margin-top:14px;font-size:0.8rem;color:var(--red)">Cancellation reason: ${o.cancellationReason}</div>` : ''}
+  `;
+
+        document.getElementById('detail-modal').classList.add('open');
+    }
+
+    // ============================================================
+    // PLACE ORDER — CART
+    // ============================================================
+    function addCartItem(vegId = null, qty = '') {
+        const id = Date.now();
+        cartItems.push({ id });
+        renderCart();
+        if (vegId) {
+            setTimeout(() => {
+                const sel = document.querySelector(`[data-cart="${id}"] select`);
+                if (sel) { sel.value = vegId; updateCartTotal(); }
+                const qtyInput = document.querySelector(`[data-cart="${id}"] input`);
+                if (qtyInput && qty) { qtyInput.value = qty; updateCartTotal(); }
+            }, 50);
+        }
+    }
+
+    function addVegToCart(vegId) {
+        showPage('place-order');
+        addCartItem(vegId, 1);
+        toast('Vegetable added to cart', 'success');
+    }
+
+    function removeCartItem(id) {
+        cartItems = cartItems.filter(c => c.id !== id);
+        renderCart();
+        updateCartTotal();
+    }
+
+    function renderCart() {
+        const container = document.getElementById('cart-items');
+        if (!cartItems.length) { container.innerHTML = ''; return; }
+        container.innerHTML = cartItems.map(c => `
+    <div class="cart-item" data-cart="${c.id}">
+      <select onchange="updateCartTotal()" style="flex:1">
+        <option value="">Select vegetable…</option>
+        ${allVegs.map(v => `<option value="${v.id}">${v.name} — Rs.${v.pricePerUnit}/${v.unit} (Stock: ${v.availableStock})</option>`).join('')}
+      </select>
+      <input type="number" min="0.1" step="0.1" placeholder="Qty" oninput="updateCartTotal()" style="text-align:center">
+      <button class="btn btn-ghost btn-sm" onclick="removeCartItem(${c.id})" style="color:var(--red);padding:6px">✕</button>
+    </div>
+  `).join('');
+    }
+
+    function updateCartTotal() {
+        let total = 0;
+        document.querySelectorAll('.cart-item').forEach(row => {
+            const vegId = Number(row.querySelector('select').value);
+            const qty = Number(row.querySelector('input').value) || 0;
+            if (vegId && qty) {
+                const veg = allVegs.find(v => v.id === vegId);
+                if (veg) total += qty * veg.pricePerUnit;
+            }
+        });
+        document.getElementById('order-total').textContent = `Rs. ${total.toLocaleString('en', {minimumFractionDigits: 2})}`;
+    }
+
+    async function loadInlineSuggestions() {
+        const el = document.getElementById('inline-suggestions');
+        // Only show if buyer has history
+        if (allOrders.length > 0) {
+            el.style.display = 'block';
+            renderSuggestionsGrid(DEMO_SUGGESTIONS, 'place-suggestions-grid', true);
+        }
+    }
+
+    function renderSuggestionsGrid(sugs, gridId, clickable = false) {
+        const grid = document.getElementById(gridId);
+        if (!sugs || !sugs.length) {
+            grid.innerHTML = '<div class="empty" style="grid-column:1/-1;padding:40px"><div class="empty-icon">📊</div><div class="empty-title">No history yet</div></div>';
+            return;
+        }
+        grid.innerHTML = sugs.map(s => `
+    <div class="sug-item" ${clickable ? `onclick="addCartItem(${s.vegetableId}, ${s.suggestedQuantity})"` : ''}>
+      <div class="sug-item-name">${s.vegetableName}</div>
+      <div class="sug-qty">${s.suggestedQuantity} <small style="font-size:0.65rem;color:var(--text-dim)">${s.unit}</small></div>
+      <div class="sug-meta">Avg: ${s.averageMonthlyQuantity}/${s.unit}/mo · ${s.basedOnMonths}mo history</div>
+      <div class="confidence-bar"><div class="confidence-fill" style="width:${s.confidenceScore}%"></div></div>
+      <div class="sug-meta" style="margin-top:4px">Confidence: ${s.confidenceScore}%</div>
+      ${clickable ? '<div class="sug-meta" style="color:var(--green);margin-top:4px">+ Add to order</div>' : ''}
+    </div>
+  `).join('');
+    }
+
+    // ============================================================
+    // SUBMIT ORDER
+    // ============================================================
+    async function submitOrder() {
+        const deliveryDate = document.getElementById('order-delivery-date').value;
+        const deliveryAddress = document.getElementById('order-delivery-address').value;
+
+        if (!deliveryDate) { toast('Please select a delivery date', 'error'); return; }
+        if (!deliveryAddress) { toast('Please enter a delivery address', 'error'); return; }
+
+        const items = [];
+        let valid = true;
+        document.querySelectorAll('.cart-item').forEach(row => {
+            const vegId = Number(row.querySelector('select').value);
+            const qty = Number(row.querySelector('input').value);
+            if (!vegId || !qty) { valid = false; return; }
+            const veg = allVegs.find(v => v.id === vegId);
+            if (veg && qty > veg.availableStock) {
+                toast(`Insufficient stock for ${veg.name}. Available: ${veg.availableStock}`, 'error');
+                valid = false;
+            }
+            items.push({ vegetableId: vegId, quantity: qty });
+        });
+
+        if (!valid || !items.length) { if (items.length === 0) toast('Please add at least one item', 'error'); return; }
+
+        const payload = { buyerId: BUYER_ID, items, deliveryDate, deliveryAddress, notes: document.getElementById('order-notes').value };
+
+        let newOrder;
+        try {
+            const r = await fetch(`${API}/orders`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(payload) });
+            const d = await r.json();
+            if (!d.success) throw new Error(d.message);
+            newOrder = d.data;
+        } catch(e) {
+            // Demo fallback
+            const total = items.reduce((s, item) => {
+                const v = allVegs.find(x => x.id === item.vegetableId);
+                return s + (v ? v.pricePerUnit * item.quantity : 0);
+            }, 0);
+            newOrder = {
+                id: Date.now(), orderNumber: 'VO-' + new Date().toISOString().slice(0,10).replace(/-/g,'') + '-' + Math.floor(Math.random()*9000+1000),
+                buyerId: BUYER_ID, status: 'PENDING', totalAmount: total, deliveryDate, deliveryAddress,
+                notes: payload.notes, canModifyUntil: new Date(Date.now() + 30*60*1000).toISOString(),
+                createdAt: new Date().toISOString(), items: items.map(i => ({...i, unitPrice: allVegs.find(v=>v.id===i.vegetableId)?.pricePerUnit || 0}))
+            };
+        }
+
+        allOrders.unshift(newOrder);
+        allNotifs.unshift({ id: Date.now(), title: 'Order Confirmed 🎉', message: `${newOrder.orderNumber} confirmed. Total: Rs. ${newOrder.totalAmount}`, type: 'ORDER_CONFIRMED', isRead: false, createdAt: new Date().toISOString() });
+
+        // Reset form
+        cartItems = [];
+        renderCart();
+        document.getElementById('order-notes').value = '';
+        document.getElementById('order-total').textContent = 'Rs. 0.00';
+
+        renderDashboard();
+        renderOrdersPage();
+        renderNotifications();
+        updateBadge();
+
+        toast('Order placed successfully! 🎉', 'success');
+        showPage('orders');
+    }
+
+    // ============================================================
+    // CANCEL ORDER
+    // ============================================================
+    function startCancel(id) {
+        cancelTargetId = id;
+        document.getElementById('cancel-reason').value = '';
+        document.getElementById('cancel-modal').classList.add('open');
+    }
+
+    async function confirmCancel() {
+        const reason = document.getElementById('cancel-reason').value;
+        if (!reason.trim()) { toast('Please provide a cancellation reason', 'error'); return; }
+
+        try {
+            const r = await fetch(`${API}/orders/${cancelTargetId}`, {
+                method: 'DELETE', headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ buyerId: BUYER_ID, reason })
+            });
+            const d = await r.json();
+            if (!d.success) throw new Error(d.message);
+        } catch(e) {
+            // Demo fallback
+            const o = allOrders.find(x => x.id === cancelTargetId);
+            if (o) { o.status = 'CANCELLED'; o.cancellationReason = reason; }
+        }
+
+        const o = allOrders.find(x => x.id === cancelTargetId);
+        if (o) { o.status = 'CANCELLED'; o.cancellationReason = reason; }
+
+        closeModal('cancel-modal');
+        renderDashboard();
+        renderOrdersPage();
+        toast('Order cancelled', 'info');
+    }
+
+    // ============================================================
+    // NOTIFICATIONS
+    // ============================================================
+    function renderNotifications() {
+        const unread = allNotifs.filter(n => !n.isRead).length;
+        document.getElementById('notif-count-label').textContent = `${unread} unread`;
+        const badge = document.getElementById('notif-badge');
+        if (unread > 0) { badge.style.display = ''; badge.textContent = unread; } else { badge.style.display = 'none'; }
+        updateBadge();
+
+        const notifTypeMap = {
+            ORDER_CONFIRMED: { icon: '✅', cls: 'notif-confirm' },
+            ORDER_SHIPPED: { icon: '🚚', cls: 'notif-ship' },
+            ORDER_DELIVERED: { icon: '🎉', cls: 'notif-deliver' },
+            ORDER_CANCELLED: { icon: '❌', cls: 'notif-cancel' },
+            DELAY_ALERT: { icon: '⚠️', cls: 'notif-cancel' },
+            DEMAND_SUGGESTION: { icon: '🤖', cls: 'notif-ai' },
+        };
+
+        const list = document.getElementById('notif-list');
+        if (!allNotifs.length) {
+            list.innerHTML = '<div class="empty"><div class="empty-icon">🔔</div><div class="empty-title">All caught up!</div></div>';
+            return;
+        }
+        list.innerHTML = allNotifs.map(n => {
+            const m = notifTypeMap[n.type] || { icon: '📌', cls: '' };
+            return `
+    <div class="notif-item ${n.isRead ? '' : 'unread'} ${m.cls}" onclick="markRead(${n.id}, this)">
+      <div class="notif-icon">${m.icon}</div>
+      <div style="flex:1">
+        <div class="notif-title">${n.title}</div>
+        <div class="notif-msg">${n.message}</div>
+        <div class="notif-time">${fmtDateTime(n.createdAt)}</div>
+      </div>
+      ${!n.isRead ? '<div style="width:8px;height:8px;border-radius:50%;background:var(--green);flex-shrink:0;margin-top:6px"></div>' : ''}
+    </div>`;
+        }).join('');
+    }
+
+    function markRead(id, el) {
+        const n = allNotifs.find(x => x.id === id);
+        if (n) n.isRead = true;
+        el.classList.remove('unread');
+        el.querySelector('[style*="border-radius:50%"]')?.remove();
+        renderNotifications();
+    }
+
+    async function markAllRead() {
+        try {
+            await fetch(`${API}/notifications/user/${BUYER_ID}/read-all`, { method: 'PATCH' });
+        } catch(e) {}
+        allNotifs.forEach(n => n.isRead = true);
+        renderNotifications();
+        toast('All notifications marked as read', 'info');
+    }
+
+    function updateBadge() {
+        const unread = allNotifs.filter(n => !n.isRead).length;
+        const badge = document.getElementById('notif-badge');
+        if (unread > 0) { badge.style.display = ''; badge.textContent = unread; } else { badge.style.display = 'none'; }
+    }
+
+    // ============================================================
+    // ADMIN
+    // ============================================================
+    function renderAdmin() {
+        const tbody = document.getElementById('admin-orders-body');
+        const statuses = ['PENDING','CONFIRMED','PACKED','SHIPPED','DELIVERED','CANCELLED'];
+        tbody.innerHTML = allOrders.map(o => `
+    <tr>
+      <td><span style="font-family:var(--font-display);font-weight:700">${o.orderNumber}</span></td>
+      <td class="td-muted">Buyer #${o.buyerId}</td>
+      <td>Rs. ${Number(o.totalAmount).toLocaleString()}</td>
+      <td><span class="status status-${o.status}">${o.status}</span></td>
+      <td style="display:flex;gap:6px;align-items:center">
+        <select id="admin-status-${o.id}" style="width:130px">
+          ${statuses.map(s => `<option ${s === o.status ? 'selected' : ''}>${s}</option>`).join('')}
+        </select>
+        <button class="btn btn-primary btn-sm" onclick="adminUpdateStatus(${o.id})">Update</button>
+      </td>
+    </tr>
+  `).join('');
+    }
+
+    async function adminUpdateStatus(orderId) {
+        const status = document.getElementById(`admin-status-${orderId}`).value;
+        try {
+            const r = await fetch(`${API}/orders/${orderId}/status`, {
+                method: 'PATCH', headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ status })
+            });
+            const d = await r.json();
+            if (!d.success) throw new Error(d.message);
+        } catch(e) {}
+        const o = allOrders.find(x => x.id === orderId);
+        if (o) o.status = status;
+        renderAdmin();
+        renderDashboard();
+        renderOrdersPage();
+        toast(`Order ${o?.orderNumber} updated to ${status}`, 'success');
+    }
+
+    // ============================================================
+    // MODAL
+    // ============================================================
+    function closeModal(id) { document.getElementById(id).classList.remove('open'); }
+    document.querySelectorAll('.overlay').forEach(o => o.addEventListener('click', e => { if (e.target === o) o.classList.remove('open'); }));
+
+    // ============================================================
+    // UTILS
+    // ============================================================
+    function fmtDate(d) {
+        if (!d) return '—';
+        return new Date(d).toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' });
+    }
+    function fmtDateTime(d) {
+        if (!d) return '—';
+        return new Date(d).toLocaleString('en-GB', { day: '2-digit', month: 'short', hour: '2-digit', minute: '2-digit' });
+    }
+    function getTimeLeft(deadline) {
+        const diff = new Date(deadline) - new Date();
+        if (diff <= 0) return 'expired';
+        const m = Math.floor(diff / 60000);
+        return m > 0 ? `${m} minute${m > 1 ? 's' : ''}` : 'less than a minute';
+    }
+
+    function toast(msg, type = 'info') {
+        const t = document.createElement('div');
+        t.className = `toast ${type}`;
+        const icons = { success: '✅', error: '❌', info: 'ℹ️' };
+        t.innerHTML = `<span>${icons[type]}</span> ${msg}`;
+        document.getElementById('toasts').appendChild(t);
+        setTimeout(() => t.remove(), 4000);
+    }
+</script>
+</body>
+</html>
