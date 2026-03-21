@@ -1,0 +1,730 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Admin Dashboard - Vegetable Management</title>
+<style>
+/* ===== RESET & BASE ===== */
+* { box-sizing: border-box; margin: 0; padding: 0; }
+body { font-family: 'Segoe UI', sans-serif; background: #f0f4f0; color: #333; min-height: 100vh; }
+
+/* ===== TOP BAR ===== */
+.topbar {
+  background: #2d5a1b;
+  color: #fff;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0 28px;
+  height: 60px;
+  position: sticky;
+  top: 0;
+  z-index: 100;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.15);
+}
+.topbar h1 { font-size: 1.1rem; font-weight: 700; letter-spacing: 0.5px; }
+.topbar .right { display: flex; align-items: center; gap: 16px; font-size: 0.9rem; }
+.logout-btn {
+  background: rgba(255,255,255,0.15);
+  border: 1px solid rgba(255,255,255,0.3);
+  color: #fff;
+  padding: 6px 14px;
+  border-radius: 6px;
+  cursor: pointer;
+  font-size: 0.85rem;
+  transition: background 0.2s;
+}
+.logout-btn:hover { background: rgba(255,255,255,0.25); }
+
+/* ===== TABS ===== */
+.tabs {
+  display: flex;
+  background: #fff;
+  border-bottom: 2px solid #e0e0e0;
+  padding: 0 28px;
+}
+.tab-btn {
+  padding: 16px 28px;
+  border: none;
+  background: none;
+  font-size: 0.95rem;
+  font-weight: 600;
+  color: #777;
+  cursor: pointer;
+  border-bottom: 3px solid transparent;
+  margin-bottom: -2px;
+  transition: all 0.2s;
+}
+.tab-btn.active { color: #2d5a1b; border-bottom-color: #4a9e3f; }
+.tab-btn:hover { color: #2d5a1b; }
+
+/* ===== MAIN CONTENT ===== */
+.content { padding: 28px; max-width: 1200px; margin: 0 auto; }
+.tab-panel { display: none; }
+.tab-panel.active { display: block; }
+
+/* ===== SECTION HEADER ===== */
+.section-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 20px;
+  flex-wrap: wrap;
+  gap: 12px;
+}
+.section-header h2 { font-size: 1.2rem; color: #2d5a1b; font-weight: 700; }
+.search-box {
+  padding: 9px 14px;
+  border: 1.5px solid #ddd;
+  border-radius: 8px;
+  font-size: 0.9rem;
+  width: 240px;
+  outline: none;
+}
+.search-box:focus { border-color: #4a9e3f; }
+
+/* ===== STATS CARDS ===== */
+.stats-row { display: flex; gap: 16px; margin-bottom: 28px; flex-wrap: wrap; }
+.stat-card {
+  flex: 1;
+  min-width: 140px;
+  background: #fff;
+  border-radius: 12px;
+  padding: 20px 22px;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.06);
+  border-left: 4px solid #4a9e3f;
+}
+.stat-card.orange { border-left-color: #e67e22; }
+.stat-card.blue { border-left-color: #2980b9; }
+.stat-card.red { border-left-color: #c0392b; }
+.stat-num { font-size: 2rem; font-weight: 700; color: #2d5a1b; }
+.stat-card.orange .stat-num { color: #e67e22; }
+.stat-card.blue .stat-num { color: #2980b9; }
+.stat-card.red .stat-num { color: #c0392b; }
+.stat-label { font-size: 0.82rem; color: #888; margin-top: 4px; }
+
+/* ===== TABLE ===== */
+.table-wrap {
+  background: #fff;
+  border-radius: 12px;
+  overflow: hidden;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.06);
+}
+table { width: 100%; border-collapse: collapse; font-size: 0.88rem; }
+th {
+  background: #f5f9f5;
+  color: #2d5a1b;
+  padding: 13px 14px;
+  text-align: left;
+  font-weight: 600;
+  border-bottom: 2px solid #e8f0e8;
+}
+td { padding: 12px 14px; border-bottom: 1px solid #f0f0f0; vertical-align: middle; }
+tr:last-child td { border-bottom: none; }
+tr:hover td { background: #fafdf8; }
+
+/* ===== BADGES ===== */
+.badge {
+  display: inline-block;
+  padding: 3px 10px;
+  border-radius: 20px;
+  font-size: 0.75rem;
+  font-weight: 600;
+  text-transform: capitalize;
+}
+.badge-active { background: #d4edda; color: #155724; }
+.badge-pending { background: #fff3cd; color: #856404; }
+.badge-inactive { background: #f8d7da; color: #721c24; }
+
+/* ===== ACTION BUTTONS ===== */
+.actions { display: flex; gap: 6px; flex-wrap: wrap; }
+.btn-sm {
+  padding: 5px 12px;
+  border: none;
+  border-radius: 6px;
+  font-size: 0.78rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: opacity 0.15s;
+}
+.btn-sm:hover { opacity: 0.8; }
+.btn-approve { background: #4a9e3f; color: #fff; }
+.btn-deactivate { background: #e67e22; color: #fff; }
+.btn-activate { background: #2980b9; color: #fff; }
+.btn-edit { background: #6c757d; color: #fff; }
+.btn-delete { background: #c0392b; color: #fff; }
+
+/* ===== REPORTS ===== */
+.report-options { display: flex; gap: 14px; margin-bottom: 24px; flex-wrap: wrap; }
+.report-opt {
+  flex: 1;
+  min-width: 200px;
+  background: #fff;
+  border: 2px solid #e0e0e0;
+  border-radius: 12px;
+  padding: 20px 18px;
+  cursor: pointer;
+  transition: all 0.2s;
+  text-align: center;
+}
+.report-opt:hover, .report-opt.selected { border-color: #4a9e3f; background: #f0f8ee; }
+.report-opt .icon { font-size: 2rem; margin-bottom: 8px; }
+.report-opt .rtitle { font-weight: 700; color: #2d5a1b; font-size: 0.95rem; }
+.report-opt .rdesc { font-size: 0.8rem; color: #888; margin-top: 4px; }
+.report-result {
+  background: #fff;
+  border-radius: 12px;
+  padding: 24px;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.06);
+}
+.report-result h3 { color: #2d5a1b; margin-bottom: 16px; font-size: 1rem; }
+.report-item {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 10px 0;
+  border-bottom: 1px solid #f0f0f0;
+  font-size: 0.9rem;
+}
+.report-item:last-child { border-bottom: none; }
+.report-val { font-weight: 700; color: #4a9e3f; }
+
+/* ===== MODAL ===== */
+.modal-overlay {
+  display: none;
+  position: fixed;
+  inset: 0;
+  background: rgba(0,0,0,0.45);
+  z-index: 200;
+  align-items: center;
+  justify-content: center;
+}
+.modal-overlay.open { display: flex; }
+.modal {
+  background: #fff;
+  border-radius: 14px;
+  padding: 32px 28px;
+  width: 420px;
+  max-width: 95vw;
+  max-height: 90vh;
+  overflow-y: auto;
+  box-shadow: 0 8px 32px rgba(0,0,0,0.18);
+}
+.modal h3 { color: #2d5a1b; margin-bottom: 20px; font-size: 1.1rem; }
+.modal .form-group { margin-bottom: 12px; }
+.modal label { display: block; font-size: 0.82rem; color: #666; margin-bottom: 4px; font-weight: 600; }
+.modal input {
+  width: 100%;
+  padding: 10px 13px;
+  border: 1.5px solid #ddd;
+  border-radius: 7px;
+  font-size: 0.9rem;
+  outline: none;
+}
+.modal input:focus { border-color: #4a9e3f; }
+.modal-actions { display: flex; gap: 10px; margin-top: 20px; }
+.btn-primary {
+  flex: 1;
+  padding: 11px;
+  background: #4a9e3f;
+  color: #fff;
+  border: none;
+  border-radius: 8px;
+  font-weight: 600;
+  cursor: pointer;
+  font-size: 0.92rem;
+}
+.btn-primary:hover { background: #3a8030; }
+.btn-cancel {
+  flex: 1;
+  padding: 11px;
+  background: #f0f0f0;
+  color: #555;
+  border: none;
+  border-radius: 8px;
+  font-weight: 600;
+  cursor: pointer;
+  font-size: 0.92rem;
+}
+.btn-cancel:hover { background: #e0e0e0; }
+
+/* ===== TOAST ===== */
+.toast {
+  position: fixed;
+  bottom: 28px;
+  right: 28px;
+  background: #2d5a1b;
+  color: #fff;
+  padding: 13px 22px;
+  border-radius: 8px;
+  font-size: 0.9rem;
+  font-weight: 500;
+  display: none;
+  z-index: 300;
+  box-shadow: 0 4px 16px rgba(0,0,0,0.2);
+}
+.toast.show { display: block; animation: slideIn 0.3s ease; }
+.toast.error-toast { background: #c0392b; }
+@keyframes slideIn { from { transform: translateY(20px); opacity: 0; } to { transform: translateY(0); opacity: 1; } }
+
+/* ===== EMPTY STATE ===== */
+.empty { text-align: center; padding: 48px 20px; color: #aaa; }
+.empty .ei { font-size: 3rem; }
+
+/* ===== FILTER TABS ===== */
+.filter-tabs { display: flex; gap: 8px; margin-bottom: 16px; flex-wrap: wrap; }
+.filter-tab {
+  padding: 6px 16px;
+  border-radius: 20px;
+  border: 1.5px solid #ddd;
+  background: #fff;
+  font-size: 0.82rem;
+  font-weight: 600;
+  cursor: pointer;
+  color: #777;
+  transition: all 0.2s;
+}
+.filter-tab.active { background: #4a9e3f; color: #fff; border-color: #4a9e3f; }
+</style>
+</head>
+<body>
+
+<!-- TOP BAR -->
+<div class="topbar">
+  <h1>🌿 Vegetable Management System — Admin Dashboard</h1>
+  <div class="right">
+    <span id="adminName">Admin</span>
+    <button class="logout-btn" onclick="logout()">Logout</button>
+  </div>
+</div>
+
+<!-- TABS -->
+<div class="tabs">
+  <button class="tab-btn active" onclick="switchTab('farmers')">👨‍🌾 Farmers</button>
+  <button class="tab-btn" onclick="switchTab('customers')">🛒 Customers</button>
+  <button class="tab-btn" onclick="switchTab('reports')">📊 Reports</button>
+</div>
+
+<!-- CONTENT -->
+<div class="content">
+
+  <!-- ============ FARMERS TAB ============ -->
+  <div class="tab-panel active" id="tab-farmers">
+    <div class="stats-row" id="farmerStats"></div>
+    <div class="section-header">
+      <h2>Manage Farmers</h2>
+      <div style="display:flex;gap:10px;align-items:center;flex-wrap:wrap;">
+        <div class="filter-tabs" id="farmerFilter">
+          <button class="filter-tab active" onclick="setFarmerFilter('all',this)">All</button>
+          <button class="filter-tab" onclick="setFarmerFilter('pending',this)">Pending</button>
+          <button class="filter-tab" onclick="setFarmerFilter('active',this)">Active</button>
+          <button class="filter-tab" onclick="setFarmerFilter('inactive',this)">Inactive</button>
+        </div>
+        <input class="search-box" placeholder="Search farmers..." oninput="renderFarmerTable(this.value)">
+      </div>
+    </div>
+    <div class="table-wrap">
+      <table>
+        <thead>
+          <tr>
+            <th>#</th><th>Name</th><th>Email</th><th>Phone</th><th>NIC</th>
+            <th>Farm Size</th><th>Farm Location</th><th>Exp (yrs)</th>
+            <th>Status</th><th>Actions</th>
+          </tr>
+        </thead>
+        <tbody id="farmerTableBody"></tbody>
+      </table>
+    </div>
+  </div>
+
+  <!-- ============ CUSTOMERS TAB ============ -->
+  <div class="tab-panel" id="tab-customers">
+    <div class="stats-row" id="customerStats"></div>
+    <div class="section-header">
+      <h2>Manage Customers</h2>
+      <input class="search-box" placeholder="Search customers..." oninput="renderCustomerTable(this.value)">
+    </div>
+    <div class="table-wrap">
+      <table>
+        <thead>
+          <tr>
+            <th>#</th><th>Name</th><th>Email</th><th>Phone</th>
+            <th>NIC</th><th>Delivery Address</th><th>Status</th><th>Actions</th>
+          </tr>
+        </thead>
+        <tbody id="customerTableBody"></tbody>
+      </table>
+    </div>
+  </div>
+
+  <!-- ============ REPORTS TAB ============ -->
+  <div class="tab-panel" id="tab-reports">
+    <div class="section-header"><h2>Reports</h2></div>
+    <div class="report-options">
+      <div class="report-opt selected" onclick="showReport('overview',this)">
+        <div class="icon">📋</div>
+        <div class="rtitle">System Overview</div>
+        <div class="rdesc">Summary of all users, roles & statuses</div>
+      </div>
+      <div class="report-opt" onclick="showReport('farmers',this)">
+        <div class="icon">👨‍🌾</div>
+        <div class="rtitle">Farmer Report</div>
+        <div class="rdesc">Farmer approval status & farm details</div>
+      </div>
+      <div class="report-opt" onclick="showReport('customers',this)">
+        <div class="icon">🛒</div>
+        <div class="rtitle">Customer Report</div>
+        <div class="rdesc">Customer registrations & activity</div>
+      </div>
+    </div>
+    <div class="report-result" id="reportResult"></div>
+  </div>
+
+</div><!-- /content -->
+
+<!-- EDIT MODAL -->
+<div class="modal-overlay" id="editModal">
+  <div class="modal">
+    <h3>Edit User</h3>
+    <input type="hidden" id="edit_id">
+    <div class="form-group"><label>Full Name</label><input id="edit_name" type="text"></div>
+    <div class="form-group"><label>Phone</label><input id="edit_phone" type="tel"></div>
+    <div class="form-group"><label>NIC</label><input id="edit_nic" type="text"></div>
+    <div id="edit_farmer_extra" style="display:none">
+      <div class="form-group"><label>Farm Size</label><input id="edit_farmSize" type="text"></div>
+      <div class="form-group"><label>Farm Location</label><input id="edit_farmLocation" type="text"></div>
+      <div class="form-group"><label>Years of Experience</label><input id="edit_yearsExp" type="number"></div>
+    </div>
+    <div id="edit_customer_extra" style="display:none">
+      <div class="form-group"><label>Delivery Address</label><input id="edit_address" type="text"></div>
+    </div>
+    <div class="modal-actions">
+      <button class="btn-cancel" onclick="closeModal()">Cancel</button>
+      <button class="btn-primary" onclick="saveEdit()">Save Changes</button>
+    </div>
+  </div>
+</div>
+
+<!-- TOAST -->
+<div class="toast" id="toast"></div>
+
+<script>
+const API = 'http://localhost:8082/api/users';
+let allFarmers = [];
+let allCustomers = [];
+let farmerFilter = 'all';
+let editUserRole = '';
+
+// ===== INIT =====
+window.onload = async () => {
+  const user = JSON.parse(sessionStorage.getItem('loggedUser') || 'null');
+  if (!user || user.role !== 'ADMIN') {
+    window.location.href = 'index.html';
+    return;
+  }
+  document.getElementById('adminName').textContent = user.name || 'Admin';
+  await loadData();
+  showReport('overview', document.querySelector('.report-opt.selected'));
+};
+
+async function loadData() {
+  try {
+    const [farmers, customers] = await Promise.all([
+      fetch(API + '/role/FARMER').then(r => r.json()),
+      fetch(API + '/role/CUSTOMER').then(r => r.json())
+    ]);
+    allFarmers = farmers;
+    allCustomers = customers;
+    renderFarmerStats();
+    renderCustomerStats();
+    renderFarmerTable('');
+    renderCustomerTable('');
+  } catch(e) {
+    showToast('Failed to load data. Is the backend running?', true);
+  }
+}
+
+// ===== TABS =====
+function switchTab(name) {
+  document.querySelectorAll('.tab-panel').forEach(p => p.classList.remove('active'));
+  document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+  document.getElementById('tab-' + name).classList.add('active');
+  event.target.classList.add('active');
+}
+
+// ===== FARMER STATS =====
+function renderFarmerStats() {
+  const total = allFarmers.length;
+  const pending = allFarmers.filter(f => f.status === 'pending').length;
+  const active = allFarmers.filter(f => f.status === 'active').length;
+  const inactive = allFarmers.filter(f => f.status === 'inactive').length;
+  document.getElementById('farmerStats').innerHTML = `
+    <div class="stat-card"><div class="stat-num">${total}</div><div class="stat-label">Total Farmers</div></div>
+    <div class="stat-card orange"><div class="stat-num">${pending}</div><div class="stat-label">Pending Approval</div></div>
+    <div class="stat-card blue"><div class="stat-num">${active}</div><div class="stat-label">Active Farmers</div></div>
+    <div class="stat-card red"><div class="stat-num">${inactive}</div><div class="stat-label">Inactive Farmers</div></div>
+  `;
+}
+
+// ===== CUSTOMER STATS =====
+function renderCustomerStats() {
+  const total = allCustomers.length;
+  const active = allCustomers.filter(c => c.status === 'active').length;
+  const inactive = allCustomers.filter(c => c.status === 'inactive').length;
+  document.getElementById('customerStats').innerHTML = `
+    <div class="stat-card"><div class="stat-num">${total}</div><div class="stat-label">Total Customers</div></div>
+    <div class="stat-card blue"><div class="stat-num">${active}</div><div class="stat-label">Active</div></div>
+    <div class="stat-card red"><div class="stat-num">${inactive}</div><div class="stat-label">Inactive</div></div>
+  `;
+}
+
+// ===== FILTER =====
+function setFarmerFilter(val, btn) {
+  farmerFilter = val;
+  document.querySelectorAll('#farmerFilter .filter-tab').forEach(b => b.classList.remove('active'));
+  btn.classList.add('active');
+  renderFarmerTable('');
+}
+
+// ===== FARMER TABLE =====
+function renderFarmerTable(search) {
+  const s = (search || '').toLowerCase();
+  let data = allFarmers;
+  if (farmerFilter !== 'all') data = data.filter(f => f.status === farmerFilter);
+  if (s) data = data.filter(f =>
+    (f.name||'').toLowerCase().includes(s) ||
+    (f.email||'').toLowerCase().includes(s) ||
+    (f.phone||'').toLowerCase().includes(s)
+  );
+
+  const tbody = document.getElementById('farmerTableBody');
+  if (!data.length) {
+    tbody.innerHTML = `<tr><td colspan="10"><div class="empty"><div class="ei">🌾</div><div>No farmers found</div></div></td></tr>`;
+    return;
+  }
+  tbody.innerHTML = data.map((f, i) => `
+    <tr>
+      <td>${i+1}</td>
+      <td><strong>${esc(f.name)}</strong></td>
+      <td>${esc(f.email)}</td>
+      <td>${esc(f.phone)}</td>
+      <td>${esc(f.nic)}</td>
+      <td>${esc(f.farmSize)}</td>
+      <td>${esc(f.farmLocation)}</td>
+      <td>${f.yearsOfExperience ?? '-'}</td>
+      <td><span class="badge badge-${f.status}">${f.status}</span></td>
+      <td><div class="actions">${farmerActions(f)}</div></td>
+    </tr>
+  `).join('');
+}
+
+function farmerActions(f) {
+  let btns = '';
+  if (f.status === 'pending') {
+    btns += `<button class="btn-sm btn-approve" onclick="approveUser(${f.id})">Approve</button>`;
+    btns += `<button class="btn-sm btn-delete" onclick="deleteUser(${f.id}, 'farmer')">Delete</button>`;
+  } else if (f.status === 'active') {
+    btns += `<button class="btn-sm btn-deactivate" onclick="deactivateUser(${f.id}, 'farmer')">Deactivate</button>`;
+    btns += `<button class="btn-sm btn-edit" onclick="openEdit(${f.id}, 'FARMER')">Edit</button>`;
+    btns += `<button class="btn-sm btn-delete" onclick="deleteUser(${f.id}, 'farmer')">Delete</button>`;
+  } else if (f.status === 'inactive') {
+    btns += `<button class="btn-sm btn-activate" onclick="activateUser(${f.id}, 'farmer')">Activate</button>`;
+    btns += `<button class="btn-sm btn-edit" onclick="openEdit(${f.id}, 'FARMER')">Edit</button>`;
+    btns += `<button class="btn-sm btn-delete" onclick="deleteUser(${f.id}, 'farmer')">Delete</button>`;
+  }
+  return btns;
+}
+
+// ===== CUSTOMER TABLE =====
+function renderCustomerTable(search) {
+  const s = (search || '').toLowerCase();
+  let data = allCustomers;
+  if (s) data = data.filter(c =>
+    (c.name||'').toLowerCase().includes(s) ||
+    (c.email||'').toLowerCase().includes(s) ||
+    (c.phone||'').toLowerCase().includes(s)
+  );
+
+  const tbody = document.getElementById('customerTableBody');
+  if (!data.length) {
+    tbody.innerHTML = `<tr><td colspan="8"><div class="empty"><div class="ei">🛒</div><div>No customers found</div></div></td></tr>`;
+    return;
+  }
+  tbody.innerHTML = data.map((c, i) => `
+    <tr>
+      <td>${i+1}</td>
+      <td><strong>${esc(c.name)}</strong></td>
+      <td>${esc(c.email)}</td>
+      <td>${esc(c.phone)}</td>
+      <td>${esc(c.nic)}</td>
+      <td>${esc(c.deliveryAddress)}</td>
+      <td><span class="badge badge-${c.status}">${c.status}</span></td>
+      <td><div class="actions">
+        ${c.status === 'active'
+          ? `<button class="btn-sm btn-deactivate" onclick="deactivateUser(${c.id},'customer')">Deactivate</button>`
+          : `<button class="btn-sm btn-activate" onclick="activateUser(${c.id},'customer')">Activate</button>`}
+        <button class="btn-sm btn-edit" onclick="openEdit(${c.id}, 'CUSTOMER')">Edit</button>
+        <button class="btn-sm btn-delete" onclick="deleteUser(${c.id},'customer')">Delete</button>
+      </div></td>
+    </tr>
+  `).join('');
+}
+
+// ===== ACTIONS =====
+async function approveUser(id) {
+  if (!confirm('Approve this farmer?')) return;
+  await fetch(API + '/approve/' + id, { method: 'PUT' });
+  showToast('Farmer approved successfully!');
+  await loadData();
+}
+async function deactivateUser(id, type) {
+  if (!confirm('Deactivate this user?')) return;
+  await fetch(API + '/deactivate/' + id, { method: 'PUT' });
+  showToast('User deactivated.');
+  await loadData();
+}
+async function activateUser(id, type) {
+  if (!confirm('Activate this user?')) return;
+  await fetch(API + '/approve/' + id, { method: 'PUT' });
+  showToast('User activated.');
+  await loadData();
+}
+async function deleteUser(id, type) {
+  if (!confirm('Permanently delete this user? This cannot be undone.')) return;
+  await fetch(API + '/' + id, { method: 'DELETE' });
+  showToast('User deleted.');
+  await loadData();
+}
+
+// ===== EDIT MODAL =====
+function openEdit(id, role) {
+  const user = [...allFarmers, ...allCustomers].find(u => u.id === id);
+  if (!user) return;
+  editUserRole = role;
+  document.getElementById('edit_id').value = id;
+  document.getElementById('edit_name').value = user.name || '';
+  document.getElementById('edit_phone').value = user.phone || '';
+  document.getElementById('edit_nic').value = user.nic || '';
+  document.getElementById('edit_farmer_extra').style.display = role === 'FARMER' ? 'block' : 'none';
+  document.getElementById('edit_customer_extra').style.display = role === 'CUSTOMER' ? 'block' : 'none';
+  if (role === 'FARMER') {
+    document.getElementById('edit_farmSize').value = user.farmSize || '';
+    document.getElementById('edit_farmLocation').value = user.farmLocation || '';
+    document.getElementById('edit_yearsExp').value = user.yearsOfExperience || '';
+  }
+  if (role === 'CUSTOMER') {
+    document.getElementById('edit_address').value = user.deliveryAddress || '';
+  }
+  document.getElementById('editModal').classList.add('open');
+}
+function closeModal() {
+  document.getElementById('editModal').classList.remove('open');
+}
+async function saveEdit() {
+  const id = document.getElementById('edit_id').value;
+  const payload = {
+    name: document.getElementById('edit_name').value,
+    phone: document.getElementById('edit_phone').value,
+    nic: document.getElementById('edit_nic').value,
+  };
+  if (editUserRole === 'FARMER') {
+    payload.farmSize = document.getElementById('edit_farmSize').value;
+    payload.farmLocation = document.getElementById('edit_farmLocation').value;
+    payload.yearsOfExperience = parseInt(document.getElementById('edit_yearsExp').value) || null;
+  }
+  if (editUserRole === 'CUSTOMER') {
+    payload.deliveryAddress = document.getElementById('edit_address').value;
+  }
+  const res = await fetch(API + '/' + id, {
+    method: 'PUT',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(payload)
+  });
+  if (res.ok) {
+    closeModal();
+    showToast('User updated successfully!');
+    await loadData();
+  } else {
+    showToast('Update failed.', true);
+  }
+}
+
+// ===== REPORTS =====
+function showReport(type, el) {
+  document.querySelectorAll('.report-opt').forEach(o => o.classList.remove('selected'));
+  el.classList.add('selected');
+  const result = document.getElementById('reportResult');
+
+  if (type === 'overview') {
+    const totalFarmers = allFarmers.length;
+    const totalCustomers = allCustomers.length;
+    const pendingFarmers = allFarmers.filter(f => f.status === 'pending').length;
+    const activeFarmers = allFarmers.filter(f => f.status === 'active').length;
+    const activeCustomers = allCustomers.filter(c => c.status === 'active').length;
+    result.innerHTML = `
+      <h3>📋 System Overview Report</h3>
+      <div class="report-item"><span>Total Registered Farmers</span><span class="report-val">${totalFarmers}</span></div>
+      <div class="report-item"><span>Total Registered Customers</span><span class="report-val">${totalCustomers}</span></div>
+      <div class="report-item"><span>Total Users (excl. admin)</span><span class="report-val">${totalFarmers + totalCustomers}</span></div>
+      <div class="report-item"><span>Farmers Pending Approval</span><span class="report-val" style="color:#e67e22">${pendingFarmers}</span></div>
+      <div class="report-item"><span>Active Farmers</span><span class="report-val">${activeFarmers}</span></div>
+      <div class="report-item"><span>Active Customers</span><span class="report-val">${activeCustomers}</span></div>
+      <div class="report-item"><span>Farmer Approval Rate</span><span class="report-val">${totalFarmers ? Math.round(activeFarmers/totalFarmers*100) : 0}%</span></div>
+    `;
+  } else if (type === 'farmers') {
+    const pending = allFarmers.filter(f => f.status === 'pending');
+    const active = allFarmers.filter(f => f.status === 'active');
+    const inactive = allFarmers.filter(f => f.status === 'inactive');
+    const avgExp = active.length
+      ? (active.reduce((s, f) => s + (f.yearsOfExperience || 0), 0) / active.length).toFixed(1)
+      : 'N/A';
+    result.innerHTML = `
+      <h3>👨‍🌾 Farmer Report</h3>
+      <div class="report-item"><span>Total Farmers</span><span class="report-val">${allFarmers.length}</span></div>
+      <div class="report-item"><span>Pending Approval</span><span class="report-val" style="color:#e67e22">${pending.length}</span></div>
+      <div class="report-item"><span>Active Farmers</span><span class="report-val">${active.length}</span></div>
+      <div class="report-item"><span>Inactive / Deactivated</span><span class="report-val" style="color:#c0392b">${inactive.length}</span></div>
+      <div class="report-item"><span>Avg. Years of Experience (active)</span><span class="report-val">${avgExp}</span></div>
+      <div class="report-item"><span>Farmers with Farm Location</span><span class="report-val">${allFarmers.filter(f=>f.farmLocation).length}</span></div>
+      ${pending.length > 0 ? `<div style="margin-top:14px;padding:12px;background:#fff3cd;border-radius:8px;font-size:0.85rem;color:#856404;">⚠️ ${pending.length} farmer(s) waiting for approval. Go to Farmers tab to review.</div>` : ''}
+    `;
+  } else if (type === 'customers') {
+    const active = allCustomers.filter(c => c.status === 'active');
+    const inactive = allCustomers.filter(c => c.status === 'inactive');
+    const withAddress = allCustomers.filter(c => c.deliveryAddress && c.deliveryAddress.trim());
+    result.innerHTML = `
+      <h3>🛒 Customer Report</h3>
+      <div class="report-item"><span>Total Customers</span><span class="report-val">${allCustomers.length}</span></div>
+      <div class="report-item"><span>Active Customers</span><span class="report-val">${active.length}</span></div>
+      <div class="report-item"><span>Inactive / Deactivated</span><span class="report-val" style="color:#c0392b">${inactive.length}</span></div>
+      <div class="report-item"><span>With Delivery Address</span><span class="report-val">${withAddress.length}</span></div>
+      <div class="report-item"><span>Missing Delivery Address</span><span class="report-val">${allCustomers.length - withAddress.length}</span></div>
+      <div class="report-item"><span>Active Rate</span><span class="report-val">${allCustomers.length ? Math.round(active.length/allCustomers.length*100) : 0}%</span></div>
+    `;
+  }
+}
+
+// ===== UTILS =====
+function esc(str) {
+  if (!str) return '-';
+  return String(str).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+}
+function showToast(msg, isError) {
+  const t = document.getElementById('toast');
+  t.textContent = msg;
+  t.className = 'toast show' + (isError ? ' error-toast' : '');
+  setTimeout(() => t.className = 'toast', 3000);
+}
+function logout() {
+  sessionStorage.removeItem('loggedUser');
+  window.location.href = 'index.html';
+}
+
+// Close modal on overlay click
+document.getElementById('editModal').addEventListener('click', function(e) {
+  if (e.target === this) closeModal();
+});
+</script>
+</body>
+</html>

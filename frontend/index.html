@@ -1,0 +1,233 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Vegetable Management System</title>
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body {
+    font-family: 'Segoe UI', sans-serif;
+    background: #eef7ee;
+    min-height: 100vh;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+  .card {
+    background: #fff;
+    border-radius: 16px;
+    padding: 40px 36px;
+    width: 420px;
+    max-width: 95vw;
+    box-shadow: 0 4px 24px rgba(0,0,0,0.08);
+  }
+  h2 {
+    color: #2d5a1b;
+    font-size: 1.7rem;
+    font-weight: 700;
+    margin-bottom: 28px;
+    text-align: center;
+  }
+  .form-group { margin-bottom: 14px; }
+  input, select {
+    width: 100%;
+    padding: 13px 16px;
+    border: 1.5px solid #ddd;
+    border-radius: 8px;
+    font-size: 0.97rem;
+    color: #333;
+    outline: none;
+    transition: border-color 0.2s;
+    background: #fff;
+  }
+  input:focus, select:focus { border-color: #4a9e3f; }
+  input::placeholder { color: #aaa; }
+  .btn {
+    width: 100%;
+    padding: 14px;
+    background: #4a9e3f;
+    color: #fff;
+    border: none;
+    border-radius: 8px;
+    font-size: 1rem;
+    font-weight: 600;
+    cursor: pointer;
+    margin-top: 6px;
+    transition: background 0.2s;
+  }
+  .btn:hover { background: #3a8030; }
+  .link-btn {
+    display: block;
+    text-align: center;
+    margin-top: 16px;
+    color: #4a9e3f;
+    cursor: pointer;
+    font-size: 0.97rem;
+    text-decoration: underline;
+  }
+  .link-btn:hover { color: #2d5a1b; }
+  .extra-fields { display: none; }
+  .msg {
+    text-align: center;
+    margin-top: 12px;
+    font-size: 0.9rem;
+    padding: 8px 12px;
+    border-radius: 6px;
+  }
+  .msg.error { background: #fdecea; color: #c0392b; }
+  .msg.success { background: #eaf7ea; color: #2d6a2d; }
+</style>
+</head>
+<body>
+
+<!-- LOGIN PAGE -->
+<div class="card" id="loginPage">
+  <h2>Vegetable Management Login</h2>
+  <div class="form-group">
+    <input type="email" id="l_email" placeholder="Email">
+  </div>
+  <div class="form-group">
+    <input type="password" id="l_password" placeholder="Password">
+  </div>
+  <button class="btn" onclick="doLogin()">Login</button>
+  <div id="loginMsg" class="msg" style="display:none"></div>
+  <span class="link-btn" onclick="showRegister()">Create Account</span>
+</div>
+
+<!-- REGISTER PAGE -->
+<div class="card" id="registerPage" style="display:none">
+  <h2>Create Account</h2>
+  <div class="form-group"><input type="text" id="r_name" placeholder="Full Name"></div>
+  <div class="form-group"><input type="email" id="r_email" placeholder="Email"></div>
+  <div class="form-group"><input type="tel" id="r_phone" placeholder="Phone"></div>
+  <div class="form-group"><input type="text" id="r_nic" placeholder="NIC"></div>
+  <div class="form-group"><input type="password" id="r_password" placeholder="Password"></div>
+  <div class="form-group">
+    <select id="r_role" onchange="roleChanged()">
+      <option value="">Select Role</option>
+      <option value="ADMIN">Admin</option>
+      <option value="FARMER">Farmer</option>
+      <option value="CUSTOMER">Customer</option>
+    </select>
+  </div>
+
+  <!-- Farmer extra fields -->
+  <div class="extra-fields" id="farmerFields">
+    <div class="form-group"><input type="text" id="r_farmSize" placeholder="Farm Size (e.g. 5 acres)"></div>
+    <div class="form-group"><input type="text" id="r_farmLocation" placeholder="Farm Location"></div>
+    <div class="form-group"><input type="number" id="r_yearsExp" placeholder="Years of Experience"></div>
+  </div>
+
+  <!-- Customer extra fields -->
+  <div class="extra-fields" id="customerFields">
+    <div class="form-group"><input type="text" id="r_address" placeholder="Delivery Address"></div>
+  </div>
+
+  <button class="btn" onclick="doRegister()">Register</button>
+  <div id="registerMsg" class="msg" style="display:none"></div>
+  <span class="link-btn" onclick="showLogin()">Back to Login</span>
+</div>
+
+<script>
+const API = 'http://localhost:8082/api/users';
+
+function showRegister() {
+  document.getElementById('loginPage').style.display = 'none';
+  document.getElementById('registerPage').style.display = 'block';
+}
+function showLogin() {
+  document.getElementById('registerPage').style.display = 'none';
+  document.getElementById('loginPage').style.display = 'block';
+  clearMsg('loginMsg');
+}
+
+function roleChanged() {
+  const role = document.getElementById('r_role').value;
+  document.getElementById('farmerFields').style.display = role === 'FARMER' ? 'block' : 'none';
+  document.getElementById('customerFields').style.display = role === 'CUSTOMER' ? 'block' : 'none';
+}
+
+function showMsg(id, text, type) {
+  const el = document.getElementById(id);
+  el.textContent = text;
+  el.className = 'msg ' + type;
+  el.style.display = 'block';
+}
+function clearMsg(id) {
+  document.getElementById(id).style.display = 'none';
+}
+
+async function doLogin() {
+  const email = document.getElementById('l_email').value.trim();
+  const password = document.getElementById('l_password').value;
+  if (!email || !password) { showMsg('loginMsg', 'Please fill in all fields.', 'error'); return; }
+
+  try {
+    const res = await fetch(API + '/login', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ email, password })
+    });
+    if (res.ok) {
+      const user = await res.json();
+      sessionStorage.setItem('loggedUser', JSON.stringify(user));
+      if (user.role === 'ADMIN') {
+        window.location.href = 'dashboard.html';
+      } else {
+        showMsg('loginMsg', 'Logged in as ' + user.role + '. No dashboard available for this role yet.', 'success');
+      }
+    } else {
+      const msg = await res.text();
+      showMsg('loginMsg', msg || 'Login failed. Check credentials or account status.', 'error');
+    }
+  } catch (e) {
+    showMsg('loginMsg', 'Cannot connect to server. Make sure Spring Boot is running.', 'error');
+  }
+}
+
+async function doRegister() {
+  const name = document.getElementById('r_name').value.trim();
+  const email = document.getElementById('r_email').value.trim();
+  const phone = document.getElementById('r_phone').value.trim();
+  const nic = document.getElementById('r_nic').value.trim();
+  const password = document.getElementById('r_password').value;
+  const role = document.getElementById('r_role').value;
+
+  if (!name || !email || !phone || !nic || !password || !role) {
+    showMsg('registerMsg', 'Please fill in all required fields.', 'error'); return;
+  }
+
+  const payload = { name, email, phone, nic, password, role };
+
+  if (role === 'FARMER') {
+    payload.farmSize = document.getElementById('r_farmSize').value.trim();
+    payload.farmLocation = document.getElementById('r_farmLocation').value.trim();
+    const exp = document.getElementById('r_yearsExp').value;
+    payload.yearsOfExperience = exp ? parseInt(exp) : null;
+  }
+  if (role === 'CUSTOMER') {
+    payload.deliveryAddress = document.getElementById('r_address').value.trim();
+  }
+
+  try {
+    const res = await fetch(API + '/register', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(payload)
+    });
+    if (res.ok) {
+      const note = role === 'FARMER' ? ' Your account is pending admin approval.' : '';
+      showMsg('registerMsg', 'Registration successful!' + note, 'success');
+      setTimeout(showLogin, 2500);
+    } else {
+      const msg = await res.text();
+      showMsg('registerMsg', msg || 'Registration failed.', 'error');
+    }
+  } catch (e) {
+    showMsg('registerMsg', 'Cannot connect to server. Make sure Spring Boot is running.', 'error');
+  }
+}
+</script>
+</body>
+</html>
