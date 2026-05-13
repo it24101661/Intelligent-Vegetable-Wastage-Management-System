@@ -1,0 +1,578 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Order Management - Vegetable Wastage Management System</title>
+    <style>
+        * { margin:0; padding:0; box-sizing:border-box; }
+        body { font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Helvetica,Arial,sans-serif; background:#f5f7f5; color:#1f2937; }
+        table { width:100%; border-collapse:collapse; }
+        th { background:#f0f4f0; padding:10px 14px; text-align:left; font-size:12px; font-weight:600; color:#6b7280; border-bottom:1px solid #e5e7eb; }
+        td { padding:10px 14px; font-size:13px; border-bottom:1px solid #f3f4f6; }
+        tr:hover td { background:#f9fafb; }
+        .badge { display:inline-block; padding:3px 10px; border-radius:12px; font-size:11px; font-weight:600; }
+        .badge-Pending { background:#fef3c7; color:#92400e; }
+        .badge-Confirmed { background:#dbeafe; color:#1e40af; }
+        .badge-Packed { background:#ede9fe; color:#5b21b6; }
+        .badge-Shipped { background:#d1fae5; color:#065f46; }
+        .badge-Delivered { background:#dcfce7; color:#166534; }
+        .badge-Cancelled { background:#fee2e2; color:#991b1b; }
+        input, select, textarea { padding:8px 12px; border:1px solid #d1d5db; border-radius:6px; font-size:13px; font-family:inherit; outline:none; width:100%; }
+        input:focus, select:focus, textarea:focus { border-color:#16a34a; box-shadow:0 0 0 2px rgba(22,163,74,0.15); }
+        .btn { padding:8px 16px; border-radius:6px; font-size:13px; font-weight:600; cursor:pointer; border:none; display:inline-flex; align-items:center; gap:6px; font-family:inherit; }
+        .btn-green { background:#16a34a; color:white; }
+        .btn-green:hover { background:#15803d; }
+        .btn-red { background:#dc2626; color:white; }
+        .btn-red:hover { background:#b91c1c; }
+        .btn-blue { background:#2563eb; color:white; }
+        .btn-blue:hover { background:#1d4ed8; }
+        .btn-outline { background:white; border:1px solid #d1d5db; color:#374151; }
+        .btn-outline:hover { background:#f9fafb; }
+        .btn-sm { padding:5px 12px; font-size:12px; }
+        .btn:disabled { opacity:0.4; cursor:not-allowed; }
+        .card { background:white; border:1px solid #e5e7eb; border-radius:8px; }
+        .toast { position:fixed; top:20px; right:20px; padding:12px 20px; border-radius:8px; font-size:13px; font-weight:500; z-index:9999; box-shadow:0 2px 8px rgba(0,0,0,0.1); }
+        .toast-ok { background:#dcfce7; color:#166534; border-left:4px solid #16a34a; }
+        .toast-err { background:#fee2e2; color:#991b1b; border-left:4px solid #dc2626; }
+        .toast-warn { background:#fef3c7; color:#92400e; border-left:4px solid #f59e0b; }
+        .modal-bg { position:fixed; inset:0; background:rgba(0,0,0,0.3); z-index:1000; display:flex; align-items:center; justify-content:center; }
+        .modal-box { background:white; border-radius:10px; max-width:560px; width:92%; max-height:85vh; overflow-y:auto; }
+        .sidebar { width:230px; min-height:calc(100vh - 56px); background:white; border-right:1px solid #e5e7eb; }
+        .sidebar a { display:flex; align-items:center; gap:10px; padding:10px 16px; font-size:13px; color:#4b5563; text-decoration:none; cursor:pointer; }
+        .sidebar a:hover { background:#f0fdf4; color:#16a34a; }
+        .sidebar a.active { background:#dcfce7; color:#16a34a; font-weight:600; }
+        .sidebar a svg { width:16px; height:16px; flex-shrink:0; }
+        .sidebar .sep { height:1px; background:#e5e7eb; margin:6px 12px; }
+        .qty-box { display:inline-flex; border:1px solid #d1d5db; border-radius:6px; overflow:hidden; }
+        .qty-box button { width:30px; height:30px; border:none; background:#f9fafb; cursor:pointer; font-size:13px; }
+        .qty-box button:hover { background:#dcfce7; }
+        .qty-box span { width:40px; height:30px; display:flex; align-items:center; justify-content:center; font-size:13px; font-weight:600; border-left:1px solid #d1d5db; border-right:1px solid #d1d5db; }
+        .stock-bar { height:4px; background:#e5e7eb; border-radius:2px; margin-top:4px; }
+        .stock-fill { height:4px; border-radius:2px; }
+        .hidden { display:none !important; }
+        .icon { display:inline-flex; align-items:center; justify-content:center; }
+        svg.ic { width:14px; height:14px; vertical-align:middle; }
+    </style>
+</head>
+<body>
+
+<div id="toast"></div>
+<div id="modal"></div>
+
+<!-- LOGIN -->
+<div id="loginPage" style="min-height:100vh;display:flex;align-items:center;justify-content:center;background:#f5f7f5">
+    <div class="card" style="padding:32px;width:380px">
+        <div style="text-align:center;margin-bottom:24px">
+            <div style="width:48px;height:48px;background:#dcfce7;border-radius:12px;display:inline-flex;align-items:center;justify-content:center;margin-bottom:12px">
+                <!-- leaf icon -->
+                <svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="#16a34a" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M11 20A7 7 0 0 1 4 13c0-3.87 3.13-7 7-7h6a7 7 0 0 1 7 7 7 7 0 0 1-7 7z"/><path d="M11 20c0-4.97 4-9 9-9"/></svg>
+            </div>
+            <h2 style="font-size:18px;font-weight:700">Order Management</h2>
+            <p style="font-size:12px;color:#6b7280;margin-top:4px">Intelligent Vegetable Wastage Management System</p>
+        </div>
+        <div style="margin-bottom:16px">
+            <label style="font-size:12px;font-weight:600;color:#374151;display:block;margin-bottom:4px">Role</label>
+            <select id="loginRole"><option value="customer">Customer</option><option value="farmer">Farmer</option><option value="admin">Admin</option></select>
+        </div>
+        <div style="margin-bottom:16px">
+            <label style="font-size:12px;font-weight:600;color:#374151;display:block;margin-bottom:4px">Username</label>
+            <input type="text" id="loginUser" value="john_silva">
+        </div>
+        <div style="margin-bottom:20px">
+            <label style="font-size:12px;font-weight:600;color:#374151;display:block;margin-bottom:4px">Password</label>
+            <input type="password" id="loginPass" value="pass123">
+        </div>
+        <button class="btn btn-green" style="width:100%;justify-content:center;padding:10px" onclick="doLogin()">Sign In</button>
+    </div>
+</div>
+
+<!-- APP -->
+<div id="appPage" style="display:none">
+    <div style="height:56px;background:white;border-bottom:1px solid #e5e7eb;display:flex;align-items:center;padding:0 20px;position:sticky;top:0;z-index:50">
+        <div style="display:flex;align-items:center;gap:12px;flex:1">
+            <button onclick="document.getElementById('sb').classList.toggle('hidden')" style="display:none;background:none;border:none;font-size:16px;color:#374151;cursor:pointer" id="menuBtn">
+                <!-- bars icon -->
+                <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="12" x2="21" y2="12"/><line x1="3" y1="18" x2="21" y2="18"/></svg>
+            </button>
+            <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="#16a34a" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M11 20A7 7 0 0 1 4 13c0-3.87 3.13-7 7-7h6a7 7 0 0 1 7 7 7 7 0 0 1-7 7z"/><path d="M11 20c0-4.97 4-9 9-9"/></svg>
+            <span style="font-weight:700;font-size:14px">Order Management</span>
+        </div>
+        <div style="display:flex;align-items:center;gap:12px">
+            <button onclick="goTo('notifications')" style="position:relative;background:none;border:none;cursor:pointer;color:#6b7280;display:flex;align-items:center">
+                <!-- bell icon -->
+                <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 0 1-3.46 0"/></svg>
+                <span id="notifDot" style="position:absolute;top:-2px;right:-2px;width:7px;height:7px;background:#dc2626;border-radius:50%;border:1.5px solid white;display:none"></span>
+            </button>
+            <div style="display:flex;align-items:center;gap:8px;padding-left:12px;border-left:1px solid #e5e7eb">
+                <div id="avatar" style="width:32px;height:32px;background:#16a34a;color:white;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:700">J</div>
+                <div>
+                    <div id="dispName" style="font-size:13px;font-weight:600;line-height:1.2">John Silva</div>
+                    <div id="dispRole" style="font-size:11px;color:#16a34a">Customer</div>
+                </div>
+                <button onclick="doLogout()" style="background:none;border:none;cursor:pointer;color:#9ca3af;display:flex;align-items:center" title="Logout">
+                    <!-- logout icon -->
+                    <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg>
+                </button>
+            </div>
+        </div>
+    </div>
+    <div style="display:flex">
+        <div class="sidebar hidden" id="sb"><nav id="sidebarNav" style="padding:12px 8px"></nav></div>
+        <main id="content" style="flex:1;padding:20px;min-height:calc(100vh - 56px)"></main>
+    </div>
+</div>
+
+<script>
+var MOCK = true;
+var STATUSES = ['Pending','Confirmed','Packed','Shipped','Delivered'];
+
+var S = { role:null, user:null, page:null, cart:[], orders:[], vegs:[], notifs:[], suggestions:[], catFilter:'All' };
+
+/* ===== SVG ICONS ===== */
+var ICONS = {
+    'cart-plus': '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="9" cy="21" r="1"/><circle cx="20" cy="21" r="1"/><path d="M1 1h4l2.68 13.39a2 2 0 0 0 2 1.61h9.72a2 2 0 0 0 2-1.61L23 6H6"/><line x1="17" y1="9" x2="17" y2="15"/><line x1="14" y1="12" x2="20" y2="12"/></svg>',
+    'box': '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"/><polyline points="3.27 6.96 12 12.01 20.73 6.96"/><line x1="12" y1="22.08" x2="12" y2="12"/></svg>',
+    'history': '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="1 4 1 10 7 10"/><path d="M3.51 15a9 9 0 1 0 .49-4.95"/></svg>',
+    'brain': '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9.5 2A2.5 2.5 0 0 1 12 4.5v15a2.5 2.5 0 0 1-4.96-.46 2.5 2.5 0 0 1-2.96-3.08 3 3 0 0 1-.34-5.58 2.5 2.5 0 0 1 1.32-4.24 2.5 2.5 0 0 1 4.44-1.14z"/><path d="M14.5 2A2.5 2.5 0 0 0 12 4.5v15a2.5 2.5 0 0 0 4.96-.46 2.5 2.5 0 0 0 2.96-3.08 3 3 0 0 0 .34-5.58 2.5 2.5 0 0 0-1.32-4.24 2.5 2.5 0 0 0-4.44-1.14z"/></svg>',
+    'bell': '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 0 1-3.46 0"/></svg>',
+    'inbox': '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="22 12 16 12 14 15 10 15 8 12 2 12"/><path d="M5.45 5.11L2 12v6a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2v-6l-3.45-6.89A2 2 0 0 0 16.76 4H7.24a2 2 0 0 0-1.79 1.11z"/></svg>',
+    'truck': '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="1" y="3" width="15" height="13"/><polygon points="16 8 20 8 23 11 23 16 16 16 16 8"/><circle cx="5.5" cy="18.5" r="2.5"/><circle cx="18.5" cy="18.5" r="2.5"/></svg>',
+    'warehouse': '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 8.35V20a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V8.35A2 2 0 0 1 3.26 6.5l8-3.43a2 2 0 0 1 1.48 0l8 3.43A2 2 0 0 1 22 8.35z"/><path d="M6 18h12"/><path d="M6 14h12"/><rect x="9" y="10" width="6" height="12" rx="1"/></svg>',
+    'list': '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="8" y1="6" x2="21" y2="6"/><line x1="8" y1="12" x2="21" y2="12"/><line x1="8" y1="18" x2="21" y2="18"/><line x1="3" y1="6" x2="3.01" y2="6"/><line x1="3" y1="12" x2="3.01" y2="12"/><line x1="3" y1="18" x2="3.01" y2="18"/></svg>',
+    'chart-bar': '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/><line x1="2" y1="20" x2="22" y2="20"/></svg>',
+    'ban': '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="4.93" y1="4.93" x2="19.07" y2="19.07"/></svg>',
+    'check': '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>',
+    'times': '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>',
+    'edit': '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>',
+    'trash': '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg>',
+    'save': '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"/><polyline points="17 21 17 13 7 13 7 21"/><polyline points="7 3 7 8 15 8"/></svg>',
+    'plus': '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>',
+    'paper-plane': '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/></svg>',
+    'arrow-right': '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="5" y1="12" x2="19" y2="12"/><polyline points="12 5 19 12 12 19"/></svg>',
+    'check-circle': '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg>',
+    'exclamation-triangle': '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>',
+    'clock': '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>',
+    'lightbulb': '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="9" y1="18" x2="15" y2="18"/><line x1="10" y1="22" x2="14" y2="22"/><path d="M15.09 14c.18-.98.65-1.74 1.41-2.5A4.65 4.65 0 0 0 18 8 6 6 0 0 0 6 8c0 1 .23 2.23 1.5 3.5A4.61 4.61 0 0 1 8.91 14"/></svg>',
+    'external-link': '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/><polyline points="15 3 21 3 21 9"/><line x1="10" y1="14" x2="21" y2="3"/></svg>',
+    'map-marker': '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg>',
+    'magic': '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M15 4V2"/><path d="M15 16v-2"/><path d="M8 9h2"/><path d="M20 9h2"/><path d="M17.8 11.8L19 13"/><path d="M15 9h.01"/><path d="M17.8 6.2L19 5"/><path d="M3 21l9-9"/><path d="M12.2 6.2L11 5"/></svg>',
+    'info-circle': '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>',
+    'shield': '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>',
+    'user': '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>'
+};
+
+function icon(name, size) {
+    size = size || 14;
+    var svg = ICONS[name] || ICONS['box'];
+    return svg.replace('<svg ', '<svg width="'+size+'" height="'+size+'" style="vertical-align:middle;flex-shrink:0;" ');
+}
+
+/* ===== MOCK DATA ===== */
+var VEGS = [
+    { id:1, name:'Tomatoes', category:'Vegetable', price:220, stock:250, farmer:'Ravi Perera', fid:1 },
+    { id:2, name:'Carrot',   category:'Root',      price:180, stock:180, farmer:'Ravi Perera', fid:1 },
+    { id:3, name:'Cabbage',  category:'Leafy',     price:90,  stock:120, farmer:'Nimal Fernando', fid:2 },
+    { id:4, name:'Beans',    category:'Legume',    price:280, stock:100, farmer:'Nimal Fernando', fid:2 },
+    { id:5, name:'Brinjals', category:'Vegetable', price:150, stock:140, farmer:'Suresh Bandara', fid:3 },
+    { id:6, name:'Pumpkins', category:'Vegetable', price:70,  stock:200, farmer:'Suresh Bandara', fid:3 },
+];
+
+var ORDERS = [
+    { id:'ORD-1001', cid:1, cname:'John Silva', fid:1, fname:'Ravi Perera', items:[{vid:1,name:'Tomatoes',qty:20,price:220},{vid:2,name:'Carrot',qty:10,price:180}], total:6200, status:'Delivered', dd:'2025-01-10', od:'2025-01-08', addr:'Main Street, Colombo 07' },
+    { id:'ORD-1002', cid:1, cname:'John Silva', fid:2, fname:'Nimal Fernando', items:[{vid:3,name:'Cabbage',qty:30,price:90},{vid:4,name:'Beans',qty:8,price:280}], total:4940, status:'Shipped', dd:'2025-01-18', od:'2025-01-15', addr:'Main Street, Colombo 07' },
+    { id:'ORD-1003', cid:1, cname:'John Silva', fid:3, fname:'Suresh Bandara', items:[{vid:5,name:'Brinjals',qty:15,price:150},{vid:6,name:'Pumpkins',qty:25,price:70}], total:4000, status:'Confirmed', dd:'2025-01-20', od:'2025-01-17', addr:'Main Street, Colombo 07' },
+    { id:'ORD-1004', cid:1, cname:'John Silva', fid:1, fname:'Ravi Perera', items:[{vid:1,name:'Tomatoes',qty:25,price:220},{vid:3,name:'Cabbage',qty:15,price:90}], total:6950, status:'Pending', dd:'2025-01-22', od:'2025-01-18', addr:'Main Street, Colombo 07' },
+    { id:'ORD-1005', cid:2, cname:'Priya Stores', fid:2, fname:'Nimal Fernando', items:[{vid:4,name:'Beans',qty:20,price:280},{vid:2,name:'Carrot',qty:12,price:180}], total:7760, status:'Packed', dd:'2025-01-19', od:'2025-01-16', addr:'Pettah Market, Colombo 11' },
+    { id:'ORD-1006', cid:2, cname:'Priya Stores', fid:3, fname:'Suresh Bandara', items:[{vid:5,name:'Brinjals',qty:18,price:150},{vid:6,name:'Pumpkins',qty:30,price:70}], total:4800, status:'Cancelled', dd:'2025-01-21', od:'2025-01-17', reason:'Found cheaper at Dambulla', addr:'Pettah Market, Colombo 11' },
+    { id:'ORD-1007', cid:3, cname:'Green Mart Kandy', fid:1, fname:'Ravi Perera', items:[{vid:1,name:'Tomatoes',qty:40,price:220},{vid:5,name:'Brinjals',qty:20,price:150},{vid:3,name:'Cabbage',qty:25,price:90}], total:13450, status:'Delivered', dd:'2025-01-12', od:'2025-01-09', addr:'Peradeniya Road, Kandy' },
+    { id:'ORD-1008', cid:3, cname:'Green Mart Kandy', fid:2, fname:'Nimal Fernando', items:[{vid:2,name:'Carrot',qty:35,price:180},{vid:6,name:'Pumpkins',qty:40,price:70}], total:9100, status:'Pending', dd:'2025-01-23', od:'2025-01-19', addr:'Peradeniya Road, Kandy' },
+];
+
+var SUGGESTIONS = [
+    { vid:1, name:'Tomatoes', avg:20, sug:16, pct:20, why:'Demand drops mid-week based on 3-month pattern' },
+    { vid:2, name:'Carrot',   avg:10, sug:8,  pct:20, why:'You had 2-3 kg leftover per order cycle' },
+    { vid:3, name:'Cabbage',  avg:30, sug:22, pct:27, why:'Spoils faster in tropical climate; waste rate 30%' },
+    { vid:4, name:'Beans',    avg:8,  sug:8,  pct:0,  why:'Ordering pattern matches demand well' },
+    { vid:5, name:'Brinjals', avg:15, sug:18, pct:-20,why:'Seasonal demand increase predicted next 2 weeks' },
+    { vid:6, name:'Pumpkins', avg:25, sug:20, pct:20, why:'Slight over-ordering detected vs actual sales' },
+];
+
+var NOTIFS = [
+    { id:1, type:'confirm', title:'Order Confirmed', msg:'ORD-1003 confirmed by Suresh Bandara.', time:'2h ago', read:false, oid:'ORD-1003' },
+    { id:2, type:'ship', title:'Order Shipped', msg:'ORD-1002 shipped. Expected by Jan 18.', time:'5h ago', read:false, oid:'ORD-1002' },
+    { id:3, type:'deliver', title:'Delivered', msg:'ORD-1001 delivered successfully.', time:'1d ago', read:true, oid:'ORD-1001' },
+    { id:4, type:'stock', title:'Low Stock', msg:'Beans stock low (100 kg). Order soon.', time:'1d ago', read:true },
+    { id:5, type:'delay', title:'Delivery Delay', msg:'ORD-1002 may delay due to heavy rain.', time:'2d ago', read:true, oid:'ORD-1002' },
+    { id:6, type:'waste', title:'Waste Tip', msg:'Cabbage waste rate 30%. Order smaller quantities.', time:'3d ago', read:true },
+    { id:7, type:'new', title:'New Order', msg:'Green Mart Kandy ordered Carrot & Pumpkins.', time:'30m ago', read:false, oid:'ORD-1008' },
+    { id:8, type:'cancel', title:'Cancel Request', msg:'ORD-1006 cancelled by Priya Stores.', time:'3h ago', read:false, oid:'ORD-1006' },
+];
+
+var VCOL = { Tomatoes:'#ef4444', Carrot:'#f97316', Cabbage:'#22c55e', Beans:'#059669', Brinjals:'#7c3aed', Pumpkins:'#f59e0b' };
+var FARMERS = [{id:1,name:'Ravi Perera'},{id:2,name:'Nimal Fernando'},{id:3,name:'Suresh Bandara'}];
+
+var MENUS = {
+    customer: [
+        ['place-order','cart-plus','Place Order'],
+        ['my-orders','box','My Orders'],
+        ['history','history','Order History'],
+        ['ai','brain','AI Suggestions'],
+        ['notifications','bell','Notifications'],
+    ],
+    farmer: [
+        ['incoming','inbox','Incoming Orders'],
+        ['fulfill','truck','Update Delivery Status'],
+        { sep:true },
+        ['stocks','warehouse','Stock Management'],
+        { sep:true },
+        ['notifications','bell','Notifications'],
+    ],
+    admin: [
+        ['all-orders','list','All Orders'],
+        ['analytics','chart-bar','Analytics'],
+        ['cancellations','ban','Cancellations'],
+        { sep:true },
+        ['place-order','cart-plus','Create Order'],
+        ['fulfill','truck','Update Order Status'],
+        { sep:true },
+        ['stocks','warehouse','Stock Management'],
+        { sep:true },
+        ['notifications','bell','Notifications'],
+    ]
+};
+
+/* ===== HELPERS ===== */
+function rs(n) { return 'Rs. ' + n.toLocaleString(); }
+function badge(s) { return '<span class="badge badge-'+s+'">'+s+'</span>'; }
+function vdot(n) { return '<span style="display:inline-block;width:8px;height:8px;border-radius:50%;background:'+(VCOL[n]||'#9ca3af')+';margin-right:4px"></span>'; }
+function ic(name,size) { return icon(name, size||14); }
+function toast(msg, type) {
+    type = type || 'ok';
+    var d = document.getElementById('toast');
+    d.className = 'toast toast-' + type;
+    d.textContent = msg;
+    setTimeout(function(){ d.className = 'toast'; }, 3000);
+}
+function openModal(html) {
+    document.getElementById('modal').innerHTML = '<div class="modal-bg" onclick="if(event.target===this)closeModal()"><div class="modal-box">' + html + '</div></div>';
+}
+function closeModal() { document.getElementById('modal').innerHTML = ''; }
+function nextId(arr) { return Math.max.apply(null, arr.map(function(x){return x.id;})) + 1; }
+
+/* ===== AUTH ===== */
+function doLogin() {
+    var role = document.getElementById('loginRole').value;
+    var name = document.getElementById('loginUser').value.trim() || 'User';
+    S.role = role;
+    S.user = { id: role==='customer'?1:role==='farmer'?1:0, name: name.split('_').map(function(w){return w[0].toUpperCase()+w.slice(1);}).join(' '), role: role };
+    S.cart = [];
+    S.catFilter = 'All';
+    loadApp();
+}
+
+function doLogout() {
+    S = { role:null, user:null, page:null, cart:[], orders:[], vegs:[], notifs:[], suggestions:[], catFilter:'All' };
+    document.getElementById('appPage').style.display = 'none';
+    document.getElementById('loginPage').style.display = 'flex';
+}
+
+function refreshOrders() {
+    if (S.role === 'customer') S.orders = ORDERS.filter(function(o){return o.cid === S.user.id;});
+    else if (S.role === 'farmer') S.orders = ORDERS.filter(function(o){return o.fid === S.user.id;});
+    else S.orders = ORDERS.slice();
+}
+
+function refreshVegs() { S.vegs = VEGS.slice(); }
+
+function loadApp() {
+    document.getElementById('loginPage').style.display = 'none';
+    document.getElementById('appPage').style.display = 'block';
+    document.getElementById('dispName').textContent = S.user.name;
+    document.getElementById('dispRole').textContent = S.role[0].toUpperCase() + S.role.slice(1);
+    document.getElementById('avatar').textContent = S.user.name[0];
+
+    refreshVegs();
+    refreshOrders();
+    S.notifs = MOCK ? (S.role==='farmer'? NOTIFS.filter(function(n){return n.type==='new'||n.type==='cancel';}) : S.role==='admin'? NOTIFS.slice() : NOTIFS.filter(function(n){return n.type!=='new'&&n.type!=='cancel';})) : [];
+    S.suggestions = SUGGESTIONS.slice();
+    updateDot();
+
+    var html = '';
+    MENUS[S.role].forEach(function(m) {
+        if (m.sep) { html += '<div class="sep"></div>'; return; }
+        html += '<a data-p="'+m[0]+'" onclick="goTo(\''+m[0]+'\')">'+ic(m[1],16)+m[2]+'</a>';
+    });
+    document.getElementById('sidebarNav').innerHTML = html;
+
+    if (window.innerWidth >= 768) document.getElementById('sb').classList.remove('hidden');
+    var first = MENUS[S.role].filter(function(m){return !m.sep;})[0][0];
+    goTo(first);
+}
+
+function updateDot() { document.getElementById('notifDot').style.display = S.notifs.some(function(n){return !n.read;}) ? 'block' : 'none'; }
+
+function goTo(p) {
+    S.page = p;
+    document.querySelectorAll('#sidebarNav a').forEach(function(a){ a.classList.toggle('active', a.dataset.p===p); });
+    if (window.innerWidth < 768) document.getElementById('sb').classList.add('hidden');
+    var pages = { 'place-order':pgPlaceOrder, 'my-orders':pgMyOrders, 'history':pgHistory, 'ai':pgAI, 'notifications':pgNotifs, 'incoming':pgIncoming, 'fulfill':pgFulfill, 'all-orders':pgAllOrders, 'analytics':pgAnalytics, 'cancellations':pgCancellations, 'stocks':pgStocks };
+    if (pages[p]) pages[p](); else document.getElementById('content').innerHTML = '<p>Not found</p>';
+}
+
+/* ===== ORDER ===== */
+function pgPlaceOrder() {
+    var cats = ['All'];
+    S.vegs.forEach(function(v){ if (cats.indexOf(v.category)===-1) cats.push(v.category); });
+    var filtered = S.catFilter==='All' ? S.vegs : S.vegs.filter(function(v){return v.category===S.catFilter;});
+    var cartTotal = S.cart.reduce(function(s,i){return s+i.qty*i.price;},0);
+    var isAdmin = S.role === 'admin';
+    var title = isAdmin ? 'Create Order' : 'Order';
+
+    document.getElementById('content').innerHTML =
+    '<h2 style="font-size:18px;font-weight:700;margin-bottom:4px">'+title+'</h2>' +
+    '<p style="font-size:12px;color:#6b7280;margin-bottom:16px">Select vegetables and quantities. Stock is checked in real-time.</p>' +
+    (isAdmin?'<div style="background:#dbeafe;padding:10px 14px;border-radius:6px;font-size:12px;margin-bottom:14px;color:#1e40af;display:flex;align-items:center;gap:6px">'+ic('shield')+' Admin mode - placing order on behalf of a customer</div>':'') +
+    '<div style="display:flex;gap:20px;flex-wrap:wrap"><div style="flex:1;min-width:300px">' +
+    '<div style="display:flex;gap:6px;margin-bottom:12px;flex-wrap:wrap">' +
+    cats.map(function(c){return '<button class="btn btn-sm '+(S.catFilter===c?'btn-green':'btn-outline')+'" onclick="S.catFilter=\''+c+'\';goTo(\'place-order\')">'+c+'</button>';}).join('') +
+    '</div><div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(200px,1fr));gap:12px">' +
+    filtered.map(function(v){
+        var inCart = S.cart.find(function(c){return c.vid===v.id;});
+        var q = inCart ? inCart.qty : 0;
+        var low = v.stock < 120;
+        return '<div class="card" style="padding:14px"><div style="display:flex;justify-content:space-between;align-items:start;margin-bottom:8px"><div>'+vdot(v.name)+'<span style="font-weight:600;font-size:13px">'+v.name+'</span><div style="font-size:11px;color:#6b7280">'+v.farmer+'</div></div><div style="font-weight:700;font-size:13px;color:#16a34a">'+rs(v.price)+'<span style="font-weight:400;font-size:11px;color:#9ca3af">/kg</span></div></div><div style="font-size:11px;color:'+(low?'#dc2626':'#6b7280')+';margin-bottom:2px">Stock: '+v.stock+' kg '+(low?'(LOW)':'')+'</div><div class="stock-bar"><div class="stock-fill" style="width:'+Math.min(v.stock/300*100,100)+'%;background:'+(low?'#dc2626':'#16a34a')+'"></div></div>'+(q>v.stock?'<div style="font-size:11px;color:#dc2626;margin-top:4px;font-weight:600">Exceeds stock!</div>':'')+'<div style="display:flex;justify-content:space-between;align-items:center;margin-top:10px"><div class="qty-box"><button onclick="addToCart('+v.id+','+(q-1)+')">&#8722;</button><span>'+q+'</span><button onclick="addToCart('+v.id+','+(q+1)+')">+</button></div><span style="font-size:12px;font-weight:600">'+(q>0?rs(q*v.price):'')+'</span></div></div>';
+    }).join('') + '</div></div>' +
+    '<div style="width:300px;flex-shrink:0"><div class="card" style="padding:16px;position:sticky;top:76px"><div style="font-weight:700;font-size:14px;margin-bottom:12px">Cart ('+S.cart.length+')</div>' +
+    (S.cart.length===0 ? '<p style="font-size:12px;color:#9ca3af;padding:20px 0;text-align:center">Cart is empty</p>' :
+    '<div style="max-height:220px;overflow-y:auto;margin-bottom:12px">' + S.cart.map(function(item,i){return '<div style="display:flex;justify-content:space-between;align-items:center;padding:6px 0;border-bottom:1px solid #f3f4f6;font-size:12px"><div>'+vdot(item.name)+item.name+' <span style="color:#6b7280">x'+item.qty+'</span></div><div style="display:flex;align-items:center;gap:8px"><span style="font-weight:600">'+rs(item.qty*item.price)+'</span><button onclick="S.cart.splice('+i+',1);goTo(\'place-order\')" style="background:none;border:none;cursor:pointer;color:#dc2626;display:flex;align-items:center">'+ic('times',12)+'</button></div></div>';}).join('') + '</div>' +
+    '<div style="border-top:1px solid #e5e7eb;padding-top:10px"><div style="display:flex;justify-content:space-between;font-size:13px;margin-bottom:4px"><span style="color:#6b7280">Subtotal</span><span style="font-weight:600">'+rs(cartTotal)+'</span></div><div style="display:flex;justify-content:space-between;font-size:13px;margin-bottom:8px"><span style="color:#6b7280">Delivery</span><span style="font-weight:600;color:#16a34a">Free</span></div><div style="display:flex;justify-content:space-between;font-size:15px;font-weight:700;padding-top:8px;border-top:1px solid #e5e7eb"><span>Total</span><span style="color:#16a34a">'+rs(cartTotal)+'</span></div></div>' +
+    '<div style="margin-top:12px">' +
+    (isAdmin?'<label style="font-size:12px;font-weight:600;color:#374151;display:block;margin-bottom:4px">Customer Name</label><input id="adminCname" value="Walk-in Customer" style="margin-bottom:8px"><label style="font-size:12px;font-weight:600;color:#374151;display:block;margin-bottom:4px">Customer ID</label><input id="adminCid" type="number" value="0" style="margin-bottom:8px">':'') +
+    '<label style="font-size:12px;font-weight:600;color:#374151;display:block;margin-bottom:4px">Delivery Date</label><input type="date" id="dd" style="margin-bottom:8px" min="'+new Date(Date.now()+86400000).toISOString().split('T')[0]+'" value="'+new Date(Date.now()+2*86400000).toISOString().split('T')[0]+'"><label style="font-size:12px;font-weight:600;color:#374151;display:block;margin-bottom:4px">Address</label><textarea id="addr" rows="2" style="margin-bottom:12px;resize:vertical">Main Street, Colombo 07</textarea><button class="btn btn-green" style="width:100%;justify-content:center" onclick="placeOrder()">'+ic('paper-plane')+' '+title+'</button></div>'
+    ) + '</div></div></div>';
+}
+
+function addToCart(vid, qty) {
+    if (qty <= 0) { S.cart = S.cart.filter(function(c){return c.vid!==vid;}); }
+    else {
+        var v = S.vegs.find(function(x){return x.id===vid;});
+        if (qty > v.stock) { toast('Only '+v.stock+' kg available','warn'); qty = v.stock; }
+        var ex = S.cart.find(function(c){return c.vid===vid;});
+        if (ex) ex.qty = qty;
+        else S.cart.push({vid:v.id, name:v.name, qty:qty, price:v.price, stock:v.stock, farmer:v.farmer, fid:v.fid});
+    }
+    goTo('place-order');
+}
+
+function placeOrder() {
+    if (!S.cart.length) { toast('Cart is empty','warn'); return; }
+    var dd = document.getElementById('dd').value;
+    var addr = document.getElementById('addr').value.trim();
+    if (!dd) { toast('Select delivery date','warn'); return; }
+    if (!addr) { toast('Enter address','warn'); return; }
+    var bad = S.cart.find(function(c){return c.qty>c.stock;});
+    if (bad) { toast(bad.name+': exceeds stock','err'); return; }
+    var total = S.cart.reduce(function(s,i){return s+i.qty*i.price;},0);
+    var nid = 'ORD-' + (1000 + ORDERS.length + 1);
+    var cid = S.user.id, cname = S.user.name;
+    if (S.role === 'admin') { cname = document.getElementById('adminCname').value.trim() || 'Admin Order'; cid = parseInt(document.getElementById('adminCid').value) || 0; }
+    ORDERS.push({ id:nid, cid:cid, cname:cname, fid:S.cart[0].fid, fname:S.cart[0].farmer, items:S.cart.map(function(c){return {vid:c.vid,name:c.name,qty:c.qty,price:c.price};}), total:total, status:'Pending', dd:dd, od:new Date().toISOString().split('T')[0], addr:addr });
+    refreshVegs(); refreshOrders(); S.cart = [];
+    toast('Order '+nid+(S.role==='admin'?' created':' placed')+'!');
+    goTo(S.role==='admin'?'all-orders':'my-orders');
+}
+
+/* ===== MY ORDERS ===== */
+function pgMyOrders() {
+    var active = S.orders.filter(function(o){return o.status!=='Delivered'&&o.status!=='Cancelled';});
+    document.getElementById('content').innerHTML =
+    '<h2 style="font-size:18px;font-weight:700;margin-bottom:4px">My Orders</h2><p style="font-size:12px;color:#6b7280;margin-bottom:16px">'+active.length+' active order(s)</p>' +
+    (active.length===0 ? '<div class="card" style="padding:40px;text-align:center"><p style="color:#6b7280">No active orders</p><button class="btn btn-green btn-sm" style="margin-top:10px" onclick="goTo(\'place-order\')">Order</button></div>' :
+    active.map(function(o){
+        return '<div class="card" style="padding:16px;margin-bottom:12px"><div style="display:flex;justify-content:space-between;align-items:start;flex-wrap:wrap;gap:8px;margin-bottom:10px"><div><span style="font-weight:700">'+o.id+'</span> '+badge(o.status)+'<div style="font-size:11px;color:#6b7280;margin-top:2px">Ordered: '+o.od+' | Delivery: '+o.dd+' | Farmer: '+o.fname+'</div></div><div style="display:flex;gap:6px">'+(STATUSES.indexOf(o.status)<=1?'<button class="btn btn-red btn-sm" onclick="cancelModal(\''+o.id+'\')">Cancel</button>':'')+(o.status==='Pending'?'<button class="btn btn-outline btn-sm" onclick="editModal(\''+o.id+'\')">Edit</button>':'')+'<button class="btn btn-outline btn-sm" onclick="detailModal(\''+o.id+'\')">View</button></div></div><div style="display:flex;gap:6px;flex-wrap:wrap;margin-bottom:8px">'+o.items.map(function(i){return '<span style="font-size:11px;background:#f9fafb;padding:4px 10px;border-radius:12px">'+vdot(i.name)+i.name+': '+i.qty+' kg</span>';}).join('')+'</div><div style="display:flex;justify-content:space-between;font-size:13px;border-top:1px solid #f3f4f6;padding-top:8px"><span style="color:#6b7280">'+o.items.length+' item(s)</span><span style="font-weight:700;color:#16a34a">'+rs(o.total)+'</span></div></div>';
+    }).join(''));
+}
+
+/* ===== HISTORY ===== */
+function pgHistory() {
+    var hist = S.orders.filter(function(o){return o.status==='Delivered'||o.status==='Cancelled';});
+    var spent = hist.filter(function(o){return o.status==='Delivered';}).reduce(function(s,o){return s+o.total;},0);
+    document.getElementById('content').innerHTML =
+    '<h2 style="font-size:18px;font-weight:700;margin-bottom:4px">Order History</h2><p style="font-size:12px;color:#6b7280;margin-bottom:16px">Past orders and buying patterns</p><div style="display:flex;gap:12px;margin-bottom:16px;flex-wrap:wrap"><div class="card" style="padding:14px;flex:1;min-width:120px"><div style="font-size:11px;color:#6b7280">Total Orders</div><div style="font-size:22px;font-weight:800;color:#16a34a">'+hist.length+'</div></div><div class="card" style="padding:14px;flex:1;min-width:120px"><div style="font-size:11px;color:#6b7280">Total Spent</div><div style="font-size:22px;font-weight:800;color:#059669">'+rs(spent)+'</div></div><div class="card" style="padding:14px;flex:1;min-width:120px"><div style="font-size:11px;color:#6b7280">Delivered</div><div style="font-size:22px;font-weight:800;color:#166534">'+hist.filter(function(o){return o.status==='Delivered';}).length+'</div></div></div><div class="card" style="overflow-x:auto"><table><thead><tr><th>Order</th><th>Date</th><th>Items</th><th>Farmer</th><th>Amount</th><th>Status</th><th></th></tr></thead><tbody>'+hist.map(function(o){return '<tr><td style="font-weight:600">'+o.id+'</td><td>'+o.od+'</td><td style="font-size:12px">'+o.items.map(function(i){return i.name+'('+i.qty+'kg)';}).join(', ')+'</td><td>'+o.fname+'</td><td style="font-weight:600">'+rs(o.total)+'</td><td>'+badge(o.status)+'</td><td><button class="btn btn-outline btn-sm" onclick="detailModal(\''+o.id+'\')">View</button></td></tr>';}).join('')+'</tbody></table></div>';
+}
+
+/* ===== AI SUGGESTIONS ===== */
+function pgAI() {
+    var avg = Math.round(S.suggestions.reduce(function(s,sg){return s+Math.max(0,sg.pct);},0)/S.suggestions.length);
+    document.getElementById('content').innerHTML =
+    '<h2 style="font-size:18px;font-weight:700;margin-bottom:4px">AI Demand Suggestions</h2><p style="font-size:12px;color:#6b7280;margin-bottom:16px">Recommendations to reduce over-ordering and waste</p><div style="display:flex;gap:12px;margin-bottom:16px;flex-wrap:wrap"><div class="card" style="padding:14px;flex:1;min-width:140px;border-left:3px solid #16a34a"><div style="font-size:11px;color:#6b7280">Avg Waste Reduction</div><div style="font-size:22px;font-weight:800;color:#16a34a">'+avg+'%</div></div><div class="card" style="padding:14px;flex:1;min-width:140px;border-left:3px solid #059669"><div style="font-size:11px;color:#6b7280">Vegetables Analyzed</div><div style="font-size:22px;font-weight:800;color:#059669">'+S.suggestions.length+'</div></div><div class="card" style="padding:14px;flex:1;min-width:140px;border-left:3px solid #f59e0b"><div style="font-size:11px;color:#6b7280">High Waste Items</div><div style="font-size:22px;font-weight:800;color:#f59e0b">'+S.suggestions.filter(function(s){return s.pct>20;}).length+'</div></div></div><div style="display:flex;flex-direction:column;gap:8px;margin-bottom:16px">'+S.suggestions.map(function(sg){var isR=sg.pct>0,isI=sg.pct<0;return '<div class="card" style="padding:14px;border-left:3px solid #16a34a"><div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:8px"><div style="flex:1;min-width:200px"><div style="font-weight:600;font-size:13px">'+vdot(sg.name)+sg.name+'</div><div style="font-size:11px;color:#6b7280;margin-top:2px">'+sg.why+'</div></div><div style="display:flex;align-items:center;gap:16px"><div style="text-align:center"><div style="font-size:10px;color:#6b7280">Average</div><div style="font-weight:700">'+sg.avg+' kg</div></div>'+ic('arrow-right')+'<div style="text-align:center"><div style="font-size:10px;color:#6b7280">Suggested</div><div style="font-weight:700;color:'+(isR?'#16a34a':isI?'#f59e0b':'#374151')+'">'+sg.sug+' kg</div></div><span class="badge" style="background:'+(isR?'#dcfce7':isI?'#fef3c7':'#f3f4f6')+';color:'+(isR?'#166534':isI?'#92400e':'#6b7280')+'">'+(isR?'-':'+')+Math.abs(sg.pct)+'%</span><button class="btn btn-green btn-sm" onclick="applySug('+sg.vid+','+sg.sug+')">Apply</button></div></div></div>';}).join('')+'</div><button class="btn btn-green" onclick="applyAllSug()">'+ic('magic')+' Apply All to Cart</button> <button class="btn btn-outline" onclick="goTo(\'place-order\')">'+ic('cart-plus')+' Go to Place Order</button>';
+}
+function applySug(vid,qty) { var v=S.vegs.find(function(x){return x.id===vid;}); var ex=S.cart.find(function(c){return c.vid===vid;}); if(ex) ex.qty=qty; else S.cart.push({vid:v.id,name:v.name,qty:qty,price:v.price,stock:v.stock,farmer:v.farmer,fid:v.fid}); toast(v.name+': set to '+qty+' kg'); }
+function applyAllSug() { S.cart=[]; S.suggestions.forEach(function(sg){var v=S.vegs.find(function(x){return x.id===sg.vid;}); if(v) S.cart.push({vid:v.id,name:v.name,qty:sg.sug,price:v.price,stock:v.stock,farmer:v.farmer,fid:v.fid});}); toast('All suggestions applied'); goTo('place-order'); }
+
+/* ===== NOTIFICATIONS ===== */
+function pgNotifs() {
+    var unread = S.notifs.filter(function(n){return !n.read;}).length;
+    var icons2 = {confirm:'check-circle',ship:'truck',deliver:'box',stock:'exclamation-triangle',delay:'clock',waste:'lightbulb',new:'cart-plus',cancel:'ban'};
+    var colors = {confirm:'#2563eb',ship:'#16a34a',deliver:'#166534',stock:'#d97706',delay:'#ea580c',waste:'#059669',new:'#2563eb',cancel:'#dc2626'};
+    document.getElementById('content').innerHTML = '<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px"><div><h2 style="font-size:18px;font-weight:700">Notifications</h2><p style="font-size:12px;color:#6b7280">'+unread+' unread</p></div>'+(unread>0?'<button class="btn btn-outline btn-sm" onclick="S.notifs.forEach(function(n){n.read=true;});updateDot();goTo(\'notifications\')">Mark All Read</button>':'')+'</div><div class="card" style="padding:8px">'+S.notifs.map(function(n){
+        var iconSvg = (ICONS[icons2[n.type]||'bell']||'').replace('<svg ','<svg width="16" height="16" style="color:'+(colors[n.type]||'#6b7280')+'" ');
+        return '<div onclick="S.notifs.find(function(x){return x.id==='+n.id+';}).read=true;updateDot();goTo(\'notifications\')" style="display:flex;gap:12px;padding:12px;border-radius:6px;cursor:pointer;'+(n.read?'':'background:#f0fdf4')+'"><div style="width:36px;height:36px;border-radius:8px;background:#f9fafb;display:flex;align-items:center;justify-content:center;flex-shrink:0;color:'+(colors[n.type]||'#6b7280')+'">'+iconSvg+'</div><div style="flex:1;min-width:0"><div style="display:flex;align-items:center;gap:6px"><span style="font-weight:600;font-size:13px">'+n.title+'</span>'+(!n.read?'<span style="width:6px;height:6px;background:#2563eb;border-radius:50%;display:inline-block"></span>':'')+'</div><div style="font-size:12px;color:#4b5563;margin-top:1px">'+n.msg+'</div><div style="font-size:10px;color:#9ca3af;margin-top:2px">'+n.time+'</div></div>'+(n.oid?'<button class="btn btn-outline btn-sm" onclick="event.stopPropagation();detailModal(\''+n.oid+'\')" style="flex-shrink:0">'+ic('external-link',12)+'</button>':'')+'</div>';
+    }).join('')+'</div>';
+}
+
+/* ===== INCOMING ORDERS ===== */
+function pgIncoming() {
+    var inc = S.orders.filter(function(o){return o.status==='Pending';});
+    document.getElementById('content').innerHTML = '<h2 style="font-size:18px;font-weight:700;margin-bottom:4px">Incoming Orders</h2><p style="font-size:12px;color:#6b7280;margin-bottom:16px">'+inc.length+' pending order(s)</p>' +
+    (inc.length===0?'<div class="card" style="padding:40px;text-align:center;color:#6b7280">No pending orders</div>':
+    inc.map(function(o){return '<div class="card" style="padding:16px;margin-bottom:12px"><div style="display:flex;justify-content:space-between;align-items:start;flex-wrap:wrap;gap:8px;margin-bottom:10px"><div><span style="font-weight:700">'+o.id+'</span> '+badge(o.status)+'<div style="font-size:11px;color:#6b7280;margin-top:2px">From: '+o.cname+' | Ordered: '+o.od+' | Delivery: '+o.dd+'</div><div style="font-size:11px;color:#6b7280;display:flex;align-items:center;gap:4px">'+ic('map-marker',11)+' '+o.addr+'</div></div><div style="font-weight:700;font-size:16px;color:#16a34a">'+rs(o.total)+'</div></div><table style="margin-bottom:12px"><thead><tr><th>Item</th><th>Qty</th><th>Price</th><th>Subtotal</th></tr></thead><tbody>'+o.items.map(function(i){return '<tr><td>'+vdot(i.name)+i.name+'</td><td>'+i.qty+' kg</td><td>'+rs(i.price)+'/kg</td><td style="font-weight:600">'+rs(i.qty*i.price)+'</td></tr>';}).join('')+'</tbody></table><div style="display:flex;gap:8px"><button class="btn btn-green" onclick="changeStatus(\''+o.id+'\',\'Confirmed\')">'+ic('check')+' Confirm</button><button class="btn btn-red" onclick="changeStatus(\''+o.id+'\',\'Cancelled\')">'+ic('times')+' Reject</button><button class="btn btn-outline" onclick="detailModal(\''+o.id+'\')">View</button></div></div>';}).join(''));
+}
+
+/* ===== FULFILL ===== */
+function pgFulfill() {
+    var ful = S.orders.filter(function(o){return ['Confirmed','Packed','Shipped'].indexOf(o.status)!==-1;});
+    var title = S.role==='admin' ? 'Update Order Status' : 'Update Delivery Status';
+    document.getElementById('content').innerHTML = '<h2 style="font-size:18px;font-weight:700;margin-bottom:4px">'+title+'</h2><p style="font-size:12px;color:#6b7280;margin-bottom:16px">Update order status as you process them</p>' +
+    (ful.length===0?'<div class="card" style="padding:40px;text-align:center;color:#6b7280">No orders to update</div>':
+    ful.map(function(o){
+        var next = o.status==='Confirmed'?'Packed':o.status==='Packed'?'Shipped':null;
+        return '<div class="card" style="padding:16px;margin-bottom:12px"><div style="display:flex;justify-content:space-between;align-items:start;flex-wrap:wrap;gap:8px;margin-bottom:8px"><div><span style="font-weight:700">'+o.id+'</span> '+badge(o.status)+'<div style="font-size:11px;color:#6b7280;margin-top:2px">'+o.cname+' | Delivery: '+o.dd+'</div></div><div style="font-weight:700;color:#16a34a">'+rs(o.total)+'</div></div><div style="display:flex;gap:6px;flex-wrap:wrap;margin-bottom:10px">'+o.items.map(function(i){return '<span style="font-size:11px;background:#f9fafb;padding:4px 10px;border-radius:12px">'+vdot(i.name)+i.name+': '+i.qty+'kg</span>';}).join('')+'</div>' +
+        (S.role==='admin'?
+            '<div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap"><span style="font-size:12px;font-weight:600;color:#374151">Set Status:</span><select id="st_'+o.id+'" style="width:150px">'+STATUSES.map(function(s){return '<option'+(s===o.status?' selected':'')+'>'+s+'</option>';}).join('')+'<option'+(o.status==='Cancelled'?' selected':'')+'>Cancelled</option></select><button class="btn btn-blue btn-sm" onclick="adminSetStatus(\''+o.id+'\')">'+ic('save')+' Update</button></div>'
+            :
+            (next?'<button class="btn btn-green" onclick="changeStatus(\''+o.id+'\',\''+next+'\')">'+ic('arrow-right')+' Mark as '+next+'</button>':'<span style="font-size:12px;color:#16a34a;font-weight:600;display:flex;align-items:center;gap:4px">'+ic('check-circle')+' Out for delivery</span>')
+        ) + '</div>';
+    }).join(''));
+}
+
+function changeStatus(oid, ns) { var o = ORDERS.find(function(x){return x.id===oid;}); if(o) o.status = ns; refreshOrders(); toast(oid+' \u2192 '+ns); goTo(S.page); }
+
+function adminSetStatus(oid) {
+    var sel = document.getElementById('st_'+oid); if(!sel) return;
+    var ns = sel.value;
+    var o = ORDERS.find(function(x){return x.id===oid;}); if(!o) return;
+    o.status = ns;
+    if (ns === 'Cancelled' && !o.reason) o.reason = 'Status changed to Cancelled by admin';
+    refreshOrders(); toast(oid+' \u2192 '+ns); goTo(S.page);
+}
+
+/* ===== ALL ORDERS ===== */
+function pgAllOrders() {
+    document.getElementById('content').innerHTML = '<h2 style="font-size:18px;font-weight:700;margin-bottom:4px">All Orders</h2><p style="font-size:12px;color:#6b7280;margin-bottom:16px">'+S.orders.length+' total orders</p><div style="display:flex;gap:8px;margin-bottom:12px;flex-wrap:wrap"><select id="af" onchange="filterAdmin()" style="width:140px"><option value="all">All Status</option>'+STATUSES.map(function(s){return '<option value="'+s+'">'+s+'</option>';}).join('')+'<option value="Cancelled">Cancelled</option></select><input id="as" oninput="filterAdmin()" placeholder="Search ID..." style="width:180px"></div><div class="card" style="overflow-x:auto"><table id="at"><thead><tr><th>ID</th><th>Customer</th><th>Farmer</th><th>Items</th><th>Amount</th><th>Status</th><th>Date</th><th>Actions</th></tr></thead><tbody>'+S.orders.map(function(o){return '<tr data-s="'+o.status+'" data-i="'+o.id.toLowerCase()+'"><td style="font-weight:600">'+o.id+'</td><td>'+o.cname+'</td><td>'+o.fname+'</td><td style="font-size:12px">'+o.items.map(function(i){return i.name;}).join(', ')+'</td><td style="font-weight:600">'+rs(o.total)+'</td><td>'+badge(o.status)+'</td><td style="font-size:12px">'+o.od+'</td><td style="white-space:nowrap"><button class="btn btn-outline btn-sm" onclick="detailModal(\''+o.id+'\')">View</button> '+(o.status!=='Delivered'&&o.status!=='Cancelled'?'<button class="btn btn-outline btn-sm" onclick="adminStatusModal(\''+o.id+'\')" style="margin-left:4px">'+ic('edit',11)+'</button>':'')+'<button class="btn btn-red btn-sm" onclick="adminDeleteOrder(\''+o.id+'\')" style="margin-left:4px">'+ic('trash',11)+'</button></td></tr>';}).join('')+'</tbody></table></div>';
+}
+function filterAdmin() { var f=document.getElementById('af').value, s=document.getElementById('as').value.toLowerCase(); document.querySelectorAll('#at tbody tr').forEach(function(tr){ tr.style.display=(f==='all'||tr.dataset.s===f)&&(!s||tr.dataset.i.includes(s))?'':'none'; }); }
+
+function adminStatusModal(oid) {
+    var o = ORDERS.find(function(x){return x.id===oid;}); if(!o) return;
+    openModal('<div style="padding:20px"><div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:14px"><h3 style="font-size:16px;font-weight:700">Update Status: '+o.id+'</h3><button onclick="closeModal()" style="background:none;border:none;cursor:pointer;font-size:16px;color:#6b7280">'+ic('times',18)+'</button></div><label style="font-size:12px;font-weight:600;color:#374151;display:block;margin-bottom:4px">New Status</label><select id="modalSt" style="margin-bottom:14px">'+STATUSES.map(function(s){return '<option'+(s===o.status?' selected':'')+'>'+s+'</option>';}).join('')+'<option value="Cancelled">Cancelled</option></select><div id="cancelReasonWrap" style="display:none;margin-bottom:14px"><label style="font-size:12px;font-weight:600;color:#374151;display:block;margin-bottom:4px">Cancel Reason</label><textarea id="modalReason" rows="2" placeholder="Reason for cancellation"></textarea></div><div style="display:flex;gap:8px;justify-content:flex-end"><button class="btn btn-outline" onclick="closeModal()">Cancel</button><button class="btn btn-blue" onclick="doAdminStatus(\''+oid+'\')">'+ic('save')+' Update</button></div></div>');
+    setTimeout(function(){ var sel=document.getElementById('modalSt'); if(sel) sel.onchange=function(){document.getElementById('cancelReasonWrap').style.display=sel.value==='Cancelled'?'block':'none';}; },50);
+}
+function doAdminStatus(oid) { var ns=document.getElementById('modalSt').value; var o=ORDERS.find(function(x){return x.id===oid;}); if(!o)return; o.status=ns; if(ns==='Cancelled'){var r=document.getElementById('modalReason');o.reason=(r&&r.value.trim())?r.value.trim():'Cancelled by admin';} refreshOrders();closeModal();toast(oid+' \u2192 '+ns);goTo('all-orders'); }
+
+function adminDeleteOrder(oid) {
+    openModal('<div style="padding:20px"><div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:14px"><h3 style="font-size:16px;font-weight:700">Delete Order</h3><button onclick="closeModal()" style="background:none;border:none;cursor:pointer;color:#6b7280">'+ic('times',18)+'</button></div><div style="background:#fee2e2;padding:10px;border-radius:6px;font-size:13px;margin-bottom:14px;display:flex;align-items:center;gap:6px"><span style="color:#dc2626">'+ic('exclamation-triangle')+'</span>Permanently delete <strong>'+oid+'</strong>?</div><div style="display:flex;gap:8px;justify-content:flex-end"><button class="btn btn-outline" onclick="closeModal()">Keep</button><button class="btn btn-red" onclick="doDeleteOrder(\''+oid+'\')">'+ic('trash')+' Delete</button></div></div>');
+}
+function doDeleteOrder(oid) { var idx=ORDERS.findIndex(function(x){return x.id===oid;}); if(idx!==-1) ORDERS.splice(idx,1); refreshOrders(); closeModal(); toast(oid+' deleted','warn'); goTo('all-orders'); }
+
+/* ===== ANALYTICS ===== */
+function pgAnalytics() {
+    var del=S.orders.filter(function(o){return o.status==='Delivered';}); var rev=del.reduce(function(s,o){return s+o.total;},0);
+    var sc={}; S.orders.forEach(function(o){sc[o.status]=(sc[o.status]||0)+1;});
+    var vc={}; del.forEach(function(o){o.items.forEach(function(i){vc[i.name]=(vc[i.name]||0)+i.qty*i.price;});});
+    var topV=Object.entries(vc).sort(function(a,b){return b[1]-a[1];}); var maxRev=topV.length?topV[0][1]:1;
+    var cm={Delivered:'#16a34a',Cancelled:'#dc2626',Pending:'#f59e0b',Confirmed:'#0ea5e9',Packed:'#7c3aed',Shipped:'#059669'};
+    document.getElementById('content').innerHTML = '<h2 style="font-size:18px;font-weight:700;margin-bottom:4px">Order Analytics</h2><p style="font-size:12px;color:#6b7280;margin-bottom:16px">Order patterns and performance</p><div style="display:flex;gap:12px;margin-bottom:20px;flex-wrap:wrap"><div class="card" style="padding:14px;flex:1;min-width:120px"><div style="font-size:11px;color:#6b7280">Revenue</div><div style="font-size:20px;font-weight:800;color:#16a34a">'+rs(rev)+'</div></div><div class="card" style="padding:14px;flex:1;min-width:120px"><div style="font-size:11px;color:#6b7280">Avg Order</div><div style="font-size:20px;font-weight:800;color:#059669">'+(del.length?rs(Math.round(rev/del.length)):'Rs. 0')+'</div></div><div class="card" style="padding:14px;flex:1;min-width:120px"><div style="font-size:11px;color:#6b7280">Delivery Rate</div><div style="font-size:20px;font-weight:800;color:#166534">'+(S.orders.length?Math.round(del.length/S.orders.length*100):0)+'%</div></div><div class="card" style="padding:14px;flex:1;min-width:120px"><div style="font-size:11px;color:#6b7280">Cancel Rate</div><div style="font-size:20px;font-weight:800;color:#dc2626">'+(S.orders.length?Math.round(S.orders.filter(function(o){return o.status==='Cancelled';}).length/S.orders.length*100):0)+'%</div></div></div><div style="display:flex;gap:20px;flex-wrap:wrap"><div class="card" style="padding:16px;flex:1;min-width:280px"><h3 style="font-size:14px;font-weight:700;margin-bottom:12px">Status Breakdown</h3>'+Object.entries(sc).map(function(e){return '<div style="display:flex;align-items:center;gap:8px;margin-bottom:8px"><span class="badge badge-'+e[0]+'" style="min-width:70px;text-align:center">'+e[0]+'</span><span style="font-size:13px;font-weight:600">'+e[1]+'</span><div style="flex:1;height:8px;background:#f3f4f6;border-radius:4px"><div style="height:8px;border-radius:4px;width:'+e[1]/S.orders.length*100+'%;background:'+(cm[e[0]]||'#9ca3af')+'"></div></div></div>';}).join('')+'</div><div class="card" style="padding:16px;flex:1;min-width:280px"><h3 style="font-size:14px;font-weight:700;margin-bottom:12px">Revenue by Vegetable</h3>'+topV.map(function(e){return '<div style="margin-bottom:10px"><div style="display:flex;justify-content:space-between;font-size:12px;margin-bottom:3px"><span>'+vdot(e[0])+e[0]+'</span><span style="font-weight:600">'+rs(e[1])+'</span></div><div style="height:8px;background:#f3f4f6;border-radius:4px"><div style="height:8px;border-radius:4px;width:'+e[1]/maxRev*100+'%;background:'+(VCOL[e[0]]||'#9ca3af')+'"></div></div></div>';}).join('')+'</div></div>';
+}
+
+/* ===== CANCELLATIONS ===== */
+function pgCancellations() {
+    var can=S.orders.filter(function(o){return o.status==='Cancelled';});
+    document.getElementById('content').innerHTML = '<h2 style="font-size:18px;font-weight:700;margin-bottom:4px">Cancellation Management</h2><p style="font-size:12px;color:#6b7280;margin-bottom:16px">'+can.length+' cancelled order(s)</p><div style="display:flex;gap:12px;margin-bottom:16px;flex-wrap:wrap"><div class="card" style="padding:14px;flex:1;min-width:120px"><div style="font-size:11px;color:#6b7280">Cancelled</div><div style="font-size:20px;font-weight:800;color:#dc2626">'+can.length+'</div></div><div class="card" style="padding:14px;flex:1;min-width:120px"><div style="font-size:11px;color:#6b7280">Lost Value</div><div style="font-size:20px;font-weight:800;color:#dc2626">'+rs(can.reduce(function(s,o){return s+o.total;},0))+'</div></div></div>'+(can.length===0?'<div class="card" style="padding:40px;text-align:center;color:#6b7280">No cancelled orders</div>':'<div class="card" style="overflow-x:auto"><table><thead><tr><th>Order</th><th>Customer</th><th>Farmer</th><th>Amount</th><th>Date</th><th>Reason</th><th></th></tr></thead><tbody>'+can.map(function(o){return '<tr><td style="font-weight:600">'+o.id+'</td><td>'+o.cname+'</td><td>'+o.fname+'</td><td style="font-weight:600">'+rs(o.total)+'</td><td style="font-size:12px">'+o.od+'</td><td style="font-size:12px">'+(o.reason||'N/A')+'</td><td><button class="btn btn-outline btn-sm" onclick="detailModal(\''+o.id+'\')">View</button></td></tr>';}).join('')+'</tbody></table></div>');
+}
+
+/* ===== STOCK MANAGEMENT ===== */
+function pgStocks() {
+    var displayVegs = S.role === 'farmer' ? S.vegs.filter(function(v){return v.fid === S.user.id;}) : S.vegs;
+    document.getElementById('content').innerHTML =
+    '<h2 style="font-size:18px;font-weight:700;margin-bottom:4px">Stock Management</h2>' +
+    (S.role==='farmer'?'<div style="background:#fef3c7;padding:10px 14px;border-radius:6px;font-size:12px;margin-bottom:14px;color:#92400e;display:flex;align-items:center;gap:6px">'+ic('user')+' Showing your stocks only (Farmer view)</div>':'') +
+    '<div style="display:flex;gap:12px;margin-bottom:16px;flex-wrap:wrap"><div class="card" style="padding:14px;flex:1;min-width:120px"><div style="font-size:11px;color:#6b7280">Total Items</div><div style="font-size:20px;font-weight:800;color:#16a34a">'+displayVegs.length+'</div></div><div class="card" style="padding:14px;flex:1;min-width:120px"><div style="font-size:11px;color:#6b7280">Total Stock</div><div style="font-size:20px;font-weight:800;color:#059669">'+displayVegs.reduce(function(s,v){return s+v.stock;},0)+' kg</div></div><div class="card" style="padding:14px;flex:1;min-width:120px"><div style="font-size:11px;color:#6b7280">Low Stock</div><div style="font-size:20px;font-weight:800;color:#dc2626">'+displayVegs.filter(function(v){return v.stock<120;}).length+'</div></div></div>' +
+    '<div style="margin-bottom:12px"><button class="btn btn-green" onclick="stockModal()">'+ic('plus')+' Add New Stock</button></div>' +
+    '<div class="card" style="overflow-x:auto"><table><thead><tr><th>ID</th><th>Name</th><th>Category</th>'+(S.role==='admin'?'<th>Farmer</th>':'')+'<th>Price/kg</th><th>Stock (kg)</th><th>Status</th><th>Actions</th></tr></thead><tbody>' +
+    displayVegs.map(function(v){
+        var low = v.stock < 120;
+        return '<tr><td>'+v.id+'</td><td style="font-weight:600">'+vdot(v.name)+v.name+'</td><td>'+v.category+'</td>'+(S.role==='admin'?'<td>'+v.farmer+'</td>':'')+'<td>'+rs(v.price)+'</td><td>'+v.stock+'</td><td>'+(low?'<span class="badge badge-Cancelled">Low</span>':'<span class="badge badge-Delivered">OK</span>')+'</td><td style="white-space:nowrap"><button class="btn btn-outline btn-sm" onclick="stockModal('+v.id+')">'+ic('edit',11)+' Edit</button> <button class="btn btn-red btn-sm" onclick="deleteStock('+v.id+')">'+ic('trash',11)+'</button></td></tr>';
+    }).join('') +
+    '</tbody></table></div>';
+}
+
+function stockModal(vid) {
+    var v = vid ? S.vegs.find(function(x){return x.id===vid;}) : null;
+    var isEdit = !!v;
+    var farmerLocked = S.role === 'farmer';
+    var farmerId = farmerLocked ? S.user.id : (v ? v.fid : 1);
+    openModal('<div style="padding:20px"><div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:14px"><h3 style="font-size:16px;font-weight:700">'+(isEdit?'Edit Stock: '+v.name:'Add New Stock')+'</h3><button onclick="closeModal()" style="background:none;border:none;cursor:pointer;color:#6b7280">'+ic('times',18)+'</button></div>' +
+    '<div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:14px">' +
+        '<div><label style="font-size:12px;font-weight:600;color:#374151;display:block;margin-bottom:4px">Vegetable Name</label><input id="sName" value="'+(v?v.name:'')+'" placeholder="e.g. Tomatoes"></div>' +
+        '<div><label style="font-size:12px;font-weight:600;color:#374151;display:block;margin-bottom:4px">Category</label><select id="sCat"><option value="Vegetable"'+(v&&v.category==='Vegetable'?' selected':'')+'>Vegetable</option><option value="Root"'+(v&&v.category==='Root'?' selected':'')+'>Root</option><option value="Leafy"'+(v&&v.category==='Leafy'?' selected':'')+'>Leafy</option><option value="Legume"'+(v&&v.category==='Legume'?' selected':'')+'>Legume</option></select></div>' +
+        '<div><label style="font-size:12px;font-weight:600;color:#374151;display:block;margin-bottom:4px">Farmer</label><select id="sFarmer"'+(farmerLocked?' disabled':'')+'>'+FARMERS.map(function(f){return '<option value="'+f.id+'"'+(farmerId===f.id?' selected':'')+'>'+f.name+'</option>';}).join('')+'</select>'+(farmerLocked?'<div style="font-size:10px;color:#9ca3af;margin-top:2px">Locked to your account</div>':'')+'</div>' +
+        '<div><label style="font-size:12px;font-weight:600;color:#374151;display:block;margin-bottom:4px">Price per kg (Rs.)</label><input id="sPrice" type="number" value="'+(v?v.price:'')+'" placeholder="e.g. 220" min="0"></div>' +
+        '<div style="grid-column:span 2"><label style="font-size:12px;font-weight:600;color:#374151;display:block;margin-bottom:4px">Available Stock (kg)</label><input id="sStock" type="number" value="'+(v?v.stock:'')+'" placeholder="e.g. 200" min="0"></div>' +
+    '</div><div style="display:flex;gap:8px;justify-content:flex-end"><button class="btn btn-outline" onclick="closeModal()">Cancel</button><button class="btn btn-green" onclick="saveStock('+(vid||0)+')">'+ic('save')+' '+(isEdit?'Update':'Create')+'</button></div></div>');
+}
+
+function saveStock(vid) {
+    var name = document.getElementById('sName').value.trim();
+    var cat = document.getElementById('sCat').value;
+    var fid = S.role==='farmer' ? S.user.id : parseInt(document.getElementById('sFarmer').value);
+    var price = parseFloat(document.getElementById('sPrice').value);
+    var stock = parseInt(document.getElementById('sStock').value);
+    var farmer = FARMERS.find(function(f){return f.id===fid;});
+    if (!name) { toast('Enter vegetable name','warn'); return; }
+    if (!price || price <= 0) { toast('Enter valid price','warn'); return; }
+    if (!stock || stock < 0) { toast('Enter valid stock','warn'); return; }
+    if (vid) {
+        var v = VEGS.find(function(x){return x.id===vid;});
+        if (v) { v.name=name; v.category=cat; v.fid=fid; v.farmer=farmer.name; v.price=price; v.stock=stock; }
+        toast(name+' stock updated');
+    } else {
+        var newId = nextId(VEGS);
+        VEGS.push({ id:newId, name:name, category:cat, price:price, stock:stock, farmer:farmer.name, fid:fid });
+        VCOL[name] = '#' + (Math.floor(Math.random()*0x888888)+0x444444).toString(16);
+        toast(name+' stock created');
+    }
+    refreshVegs(); closeModal(); goTo('stocks');
+}
+
+function deleteStock(vid) {
+    var v = S.vegs.find(function(x){return x.id===vid;}); if(!v) return;
+    openModal('<div style="padding:20px"><div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:14px"><h3 style="font-size:16px;font-weight:700">Delete Stock</h3><button onclick="closeModal()" style="background:none;border:none;cursor:pointer;color:#6b7280">'+ic('times',18)+'</button></div><div style="background:#fee2e2;padding:10px;border-radius:6px;font-size:13px;margin-bottom:14px;display:flex;align-items:center;gap:6px"><span style="color:#dc2626">'+ic('exclamation-triangle')+'</span>Delete <strong>'+v.name+'</strong> stock entry?</div><div style="display:flex;gap:8px;justify-content:flex-end"><button class="btn btn-outline" onclick="closeModal()">Keep</button><button class="btn btn-red" onclick="doDeleteStock('+vid+')">'+ic('trash')+' Delete</button></div></div>');
+}
+function doDeleteStock(vid) { var idx=VEGS.findIndex(function(x){return x.id===vid;}); if(idx!==-1) VEGS.splice(idx,1); refreshVegs(); closeModal(); toast('Stock deleted','warn'); goTo('stocks'); }
+
+/* ===== SHARED MODALS ===== */
+function detailModal(oid) {
+    var o = ORDERS.find(function(x){return x.id===oid;}); if(!o) return;
+    openModal('<div style="padding:20px"><div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px"><div><h3 style="font-size:16px;font-weight:700">'+o.id+'</h3><p style="font-size:11px;color:#6b7280">Ordered: '+o.od+'</p></div><button onclick="closeModal()" style="background:none;border:none;cursor:pointer;color:#6b7280">'+ic('times',18)+'</button></div><div style="margin-bottom:14px">'+badge(o.status)+'</div><div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:14px"><div style="background:#f9fafb;padding:10px;border-radius:6px"><div style="font-size:10px;color:#6b7280">Customer</div><div style="font-size:13px;font-weight:600">'+o.cname+'</div></div><div style="background:#f9fafb;padding:10px;border-radius:6px"><div style="font-size:10px;color:#6b7280">Farmer</div><div style="font-size:13px;font-weight:600">'+o.fname+'</div></div><div style="background:#f9fafb;padding:10px;border-radius:6px"><div style="font-size:10px;color:#6b7280">Delivery Date</div><div style="font-size:13px;font-weight:600">'+o.dd+'</div></div><div style="background:#f9fafb;padding:10px;border-radius:6px"><div style="font-size:10px;color:#6b7280">Address</div><div style="font-size:13px;font-weight:600">'+o.addr+'</div></div></div><div style="margin-bottom:14px"><div style="font-size:11px;font-weight:700;color:#6b7280;margin-bottom:6px">ITEMS</div><table><thead><tr><th>Item</th><th>Qty</th><th>Price</th><th>Subtotal</th></tr></thead><tbody>'+o.items.map(function(i){return '<tr><td>'+vdot(i.name)+i.name+'</td><td>'+i.qty+' kg</td><td>'+rs(i.price)+'/kg</td><td style="font-weight:600">'+rs(i.qty*i.price)+'</td></tr>';}).join('')+'</tbody></table></div><div style="display:flex;justify-content:space-between;padding-top:10px;border-top:2px solid #e5e7eb"><span style="font-weight:700">Total</span><span style="font-weight:800;font-size:18px;color:#16a34a">'+rs(o.total)+'</span></div>'+(o.reason?'<div style="margin-top:12px;background:#fee2e2;padding:10px;border-radius:6px"><div style="font-size:11px;font-weight:700;color:#dc2626">Cancel Reason</div><div style="font-size:12px;color:#991b1b">'+o.reason+'</div></div>':'')+'</div>');
+}
+
+function cancelModal(oid) {
+    openModal('<div style="padding:20px"><div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px"><h3 style="font-size:16px;font-weight:700">Cancel Order</h3><button onclick="closeModal()" style="background:none;border:none;cursor:pointer;color:#6b7280">'+ic('times',18)+'</button></div><div style="background:#fef3c7;padding:10px;border-radius:6px;font-size:13px;margin-bottom:14px;display:flex;align-items:center;gap:6px"><span style="color:#f59e0b">'+ic('exclamation-triangle')+'</span>Cancelling <strong>'+oid+'</strong> cannot be undone.</div><label style="font-size:12px;font-weight:600;color:#374151;display:block;margin-bottom:4px">Reason</label><select id="cr" style="margin-bottom:8px"><option value="">Select reason</option><option>Found cheaper alternative</option><option>Order placed by mistake</option><option>Delivery date too far</option><option>Change in requirement</option><option>Other</option></select><textarea id="crt" rows="2" placeholder="Details (optional)" style="margin-bottom:14px;resize:vertical"></textarea><div style="display:flex;gap:8px;justify-content:flex-end"><button class="btn btn-outline" onclick="closeModal()">Keep</button><button class="btn btn-red" onclick="doCancel(\''+oid+'\')">Confirm Cancel</button></div></div>');
+}
+function doCancel(oid) { var r1=document.getElementById('cr').value,r2=document.getElementById('crt').value; if(!r1&&!r2){toast('Provide a reason','warn');return;} var o=ORDERS.find(function(x){return x.id===oid;}); if(o){o.status='Cancelled';o.reason=r1||r2;} refreshOrders(); closeModal(); toast(oid+' cancelled','warn'); goTo(S.page); }
+
+function editModal(oid) {
+    var o = ORDERS.find(function(x){return x.id===oid;}); if(!o) return;
+    openModal('<div style="padding:20px"><div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px"><h3 style="font-size:16px;font-weight:700">Edit '+oid+'</h3><button onclick="closeModal()" style="background:none;border:none;cursor:pointer;color:#6b7280">'+ic('times',18)+'</button></div><div style="background:#dbeafe;padding:10px;border-radius:6px;font-size:12px;margin-bottom:14px;display:flex;align-items:center;gap:6px"><span style="color:#2563eb">'+ic('info-circle')+'</span>Only pending orders can be edited.</div>'+o.items.map(function(item,idx){var v=S.vegs.find(function(x){return x.id===item.vid;});var cs=v?v.stock:999;return '<div style="display:flex;justify-content:space-between;align-items:center;padding:10px;background:#f9fafb;border-radius:6px;margin-bottom:6px"><div>'+vdot(item.name)+'<span style="font-weight:600;font-size:13px">'+item.name+'</span><span style="font-size:11px;color:#6b7280;display:block">Stock: '+cs+' kg</span></div><input type="number" id="eq'+idx+'" value="'+item.qty+'" min="1" max="'+cs+'" style="width:70px;text-align:center"></div>';}).join('')+'<div style="margin-top:10px"><label style="font-size:12px;font-weight:600;color:#374151;display:block;margin-bottom:4px">Delivery Date</label><input type="date" id="edd" value="'+o.dd+'" style="margin-bottom:14px"></div><div style="display:flex;gap:8px;justify-content:flex-end"><button class="btn btn-outline" onclick="closeModal()">Discard</button><button class="btn btn-green" onclick="doEdit(\''+oid+'\')">Save</button></div></div>');
+}
+function doEdit(oid) { var o=ORDERS.find(function(x){return x.id===oid;}); var ni=o.items.map(function(item,idx){var nq=parseInt(document.getElementById('eq'+idx).value)||item.qty;return {vid:item.vid,name:item.name,qty:nq,price:item.price};}); for(var i=0;i<ni.length;i++){var v=S.vegs.find(function(x){return x.id===ni[i].vid;});if(v&&ni[i].qty>v.stock){toast(ni[i].name+': only '+v.stock+' kg','err');return;}} o.items=ni;o.total=ni.reduce(function(s,i){return s+i.qty*i.price;},0);o.dd=document.getElementById('edd').value; refreshOrders(); closeModal(); toast(oid+' updated'); goTo(S.page); }
+
+/* ===== RESPONSIVE ===== */
+function checkWidth() { var sb=document.getElementById('sb'),mb=document.getElementById('menuBtn'); if(window.innerWidth>=768){sb.classList.remove('hidden');mb.style.display='none';}else{sb.classList.add('hidden');mb.style.display='flex';} }
+window.addEventListener('resize', checkWidth);
+document.addEventListener('keydown', function(e){ if(e.key==='Escape') closeModal(); });
+</script>
+</body>
+</html>
